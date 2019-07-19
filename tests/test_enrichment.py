@@ -24,7 +24,7 @@ class TestEnrichment(unittest.TestCase):
         )
 
         client.create_bucket(Bucket="MIKE")
-        client.upload_file(Filename="tests/test_data.json", Bucket="MIKE", Key="123")
+        client.upload_file(Filename="tests/fixtures/test_data.json", Bucket="MIKE", Key="123")
 
         test_dataframe = lambda_wrangler_function.get_from_s3("MIKE", "123")
 
@@ -87,7 +87,7 @@ class TestEnrichment(unittest.TestCase):
         queue = sqs.create_queue(QueueName="test_queue")
         queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
         testdata = ''
-        with open('tests/test_data.json', "r") as file:
+        with open('tests/fixtures/test_data.json', "r") as file:
             testdata = file.read()
         testdata = pd.DataFrame(json.loads(testdata))
         with mock.patch.dict(lambda_wrangler_function.os.environ, {
@@ -108,7 +108,7 @@ class TestEnrichment(unittest.TestCase):
                 with mock.patch('enrichment_wrangler.boto3.client') as mock_client:
                     mock_client_object = mock.Mock()
                     mock_client.return_value = mock_client_object
-                    with open('tests/test_data_from_method.json', "rb") as file:
+                    with open('tests/fixtures/test_data_from_method.json', "rb") as file:
                         mock_client_object.invoke.return_value = {"Payload": StreamingBody(file, 4878)}
                         response = lambda_wrangler_function.lambda_handler(
                             {"RuntimeVariables": {"checkpoint": 666}}, None)
@@ -168,11 +168,11 @@ class TestEnrichment(unittest.TestCase):
         # one row in test data has been altered to trigger this.
         testdata = ''
         lookupdata = ''
-        with open('tests/test_data.json', "r") as file:
+        with open('tests/fixtures/test_data.json', "r") as file:
             testdata = file.read()
-        with open('tests/county_marine_lookup.json', "r") as file:
+        with open('tests/fixtures/county_marine_lookup.json', "r") as file:
             countylookupdata = file.read()
-        with open('tests/responder_county_lookup.json', "r") as file:
+        with open('tests/fixtures/responder_county_lookup.json', "r") as file:
             responder_lookup = file.read()
         testdata_df = pd.DataFrame(json.loads(testdata))
         countylookupdata_df = pd.DataFrame(json.loads(countylookupdata))
@@ -205,11 +205,11 @@ class TestEnrichment(unittest.TestCase):
             "period_column": "period",
             "responder_lookup_file": "mike.mike"
         }):
-            with open('tests/test_data.json', "r") as file:
+            with open('tests/fixtures/test_data.json', "r") as file:
                 testdata = file.read()
-            with open('tests/county_marine_lookup.json', "r") as file:
+            with open('tests/fixtures/county_marine_lookup.json', "r") as file:
                 countylookupdata = file.read()
-            with open('tests/responder_county_lookup.json', "r") as file:
+            with open('tests/fixtures/responder_county_lookup.json', "r") as file:
                 responder_lookup = file.read()
             testdata_df = pd.DataFrame(json.loads(testdata))
             countylookupdata_df = pd.DataFrame(json.loads(countylookupdata))
@@ -246,10 +246,10 @@ class TestEnrichment(unittest.TestCase):
             )
 
             client.create_bucket(Bucket="MIKE")
-            client.upload_file(Filename="tests/responder_county_lookup.json", Bucket="MIKE", Key="responderlookup")
-            client.upload_file(Filename="tests/county_marine_lookup.json", Bucket="MIKE", Key="countylookup")
+            client.upload_file(Filename="tests/fixtures/responder_county_lookup.json", Bucket="MIKE", Key="responderlookup")
+            client.upload_file(Filename="tests/fixtures/county_marine_lookup.json", Bucket="MIKE", Key="countylookup")
 
-            with open('tests/test_data.json', "r") as file:
+            with open('tests/fixtures/test_data.json', "r") as file:
                 testdata = file.read()
 
             test_output = lambda_method_function.lambda_handler(testdata, "")
