@@ -41,12 +41,15 @@ def send_sqs_message(queue_url, message, sqs_messageid_name):
     """
     Will send an sqs message to a specified queue
     :param queue_url - String: The url of the queue to send to.
-    :param message - String: The message to be sent(json string representation of dataframe)
+    :param message - String: The message to be sent
+                    (json string representation of dataframe)
     :param sqs_messageid_name - String: The messageid to attach to the message
     :return Nothing:
     """
     sqs = boto3.client('sqs', region_name='eu-west-2')
-    sqs.send_message(QueueUrl=queue_url, MessageBody=message, MessageGroupId=sqs_messageid_name, MessageDeduplicationId=str(random.getrandbits(128)))
+    sqs.send_message(QueueUrl=queue_url, MessageBody=message,
+                     MessageGroupId=sqs_messageid_name,
+                     MessageDeduplicationId=str(random.getrandbits(128)))
 
 
 def lambda_handler(event, context):
@@ -79,9 +82,10 @@ def lambda_handler(event, context):
         data_df = get_from_s3(bucket_name, input_data)
         wrangled_data = wrangle_data(data_df, identifier_column)
 
-        response = lambda_client.invoke(FunctionName=method_name, Payload=json.dumps(wrangled_data))
+        response = lambda_client.invoke(FunctionName=method_name,
+                                        Payload=json.dumps(wrangled_data))
         json_response = response.get('Payload').read().decode("utf-8")
-        
+
         final_output = json.loads(json_response)
         anomalies = final_output['anomalies']
         final_output = final_output['data']
@@ -90,11 +94,11 @@ def lambda_handler(event, context):
 
         send_sns_message(arn, anomalies, checkpoint)
         checkpoint = checkpoint + 1
-        
+
     except Exception as exc:
 
         sqs = boto3.client('sqs', region_name='eu-west-2')
-        purge = sqs.purge_queue(
+        sqs.purge_queue(
             QueueUrl=queue_url
         )
 
@@ -116,7 +120,8 @@ def send_sns_message(arn, anomalies, checkpoint):
         Success: Whether process succeeded or not
         module: Current module
         checkpoint: Module number of process
-        anomalies: Data anomalies picked up during enrichment(non-failing but indicate problems with data)
+        anomalies: Data anomalies picked up during enrichment
+                    (non-failing but indicate problems with data)
         message: Summary of metadata.
     :param arn - String: Url of the sns queue
     :param anomalies - String: json string representing data anomalies
@@ -141,9 +146,11 @@ def send_sns_message(arn, anomalies, checkpoint):
 
 def wrangle_data(data_df, identifier_column):
     """
-    Prepares data for the enrichment step. May not be necessary going forward. Renames a column and returns df as json
+    Prepares data for the enrichment step. May not be necessary going forward.
+    Renames a column and returns df as json
     :param data_df - DataFrame: Main input data to process
-    :param identifier_column - String: The name of the column representing unique id(usually responder_id)
+    :param identifier_column - String: The name of the column
+                                representing unique id(usually responder_id)
     :return data_json - String: Json String representation of the input dataframe.
     """
     data_df.rename(columns={"idbr": identifier_column}, inplace=True)
