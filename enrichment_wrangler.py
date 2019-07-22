@@ -19,6 +19,11 @@ def _get_traceback(exception):
         )
     )
 
+def get_environment_variable(variable):
+    output = os.environ.get(variable,None)
+    if(output is None):
+        raise ValueError(str(variable)+" config parameter missing")
+    return output
 
 def get_from_s3(bucket_name, key):
     """
@@ -62,22 +67,22 @@ def lambda_handler(event, context):
     try:
         checkpoint = event['RuntimeVariables']['checkpoint']
         # S3
-        bucket_name = os.environ['bucket_name']
-        input_data = os.environ['input_data']
+        bucket_name = get_environment_variable('bucket_name')
+        input_data = get_environment_variable('input_data')
 
         # Set up client
         lambda_client = boto3.client('lambda', region_name='eu-west-2')
 
         # Sqs
-        queue_url = os.environ['queue_url']
+        queue_url = get_environment_variable('queue_url')
 
         # Sns
-        arn = os.environ['arn']
+        arn = get_environment_variable('arn')
 
-        sqs_messageid_name = os.environ['sqs_messageid_name']
-        method_name = os.environ['method_name']
+        sqs_messageid_name = get_environment_variable('sqs_messageid_name')
+        method_name = get_environment_variable('method_name')
 
-        identifier_column = os.environ['identifier_column']
+        identifier_column = get_environment_variable('identifier_column')
 
         data_df = get_from_s3(bucket_name, input_data)
         wrangled_data = wrangle_data(data_df, identifier_column)

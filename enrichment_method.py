@@ -17,6 +17,11 @@ def _get_traceback(exception):
         )
     )
 
+def get_environment_variable(variable):
+    output = os.environ.get(variable,None)
+    if(output is None):
+        raise ValueError(str(variable)+" config parameter missing")
+    return output
 
 def lambda_handler(event, context):
     """
@@ -27,9 +32,10 @@ def lambda_handler(event, context):
     """
     try:
 
-        bucket_name = os.environ['bucket_name']
-        responder_lookup_file = os.environ['responder_lookup_file']
-        county_lookup_file = os.environ['county_lookup_file']
+
+        bucket_name = get_environment_variable('bucket_name')
+        responder_lookup_file = get_environment_variable('responder_lookup_file')
+        county_lookup_file = get_environment_variable('county_lookup_file')
 
         # Set up clients
         s3 = boto3.resource('s3', region_name='eu-west-2')
@@ -146,18 +152,18 @@ def data_enrichment(data_df, responder_lookup_df, county_lookup_df):
             anomalies detected in the process.)
     """
 
-    identifier_column = os.environ['identifier_column']
+    identifier_column = get_environment_variable('identifier_column')
 
-    county_lookup_column_1 = os.environ['county_lookup_column_1']
-    county_lookup_column_2 = os.environ['county_lookup_column_2']
-    county_lookup_column_3 = os.environ['county_lookup_column_3']
-    county_lookup_column_4 = os.environ['county_lookup_column_4']
+    county_lookup_column_1 = get_environment_variable('county_lookup_column_1')
+    county_lookup_column_2 = get_environment_variable('county_lookup_column_2')
+    county_lookup_column_3 = get_environment_variable('county_lookup_column_3')
+    county_lookup_column_4 = get_environment_variable('county_lookup_column_4')
 
-    period_column = os.environ['period_column']
+    period_column = get_environment_variable('period_column')
 
-    marine_mismatch_check = os.environ['marine_mismatch_check']
-    missing_county_check = os.environ['missing_county_check']
-    missing_region_check = os.environ['missing_region_check']
+    marine_mismatch_check = get_environment_variable('marine_mismatch_check')
+    missing_county_check = get_environment_variable('missing_county_check')
+    missing_region_check = get_environment_variable('missing_region_check')
 
     # Renaming columns to match what is expected
     responder_lookup_df.rename(columns={"ref": identifier_column,
