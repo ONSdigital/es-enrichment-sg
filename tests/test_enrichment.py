@@ -12,7 +12,7 @@ import enrichment_wrangler as lambda_wrangler_function  # noqa E402
 import enrichment_method as lambda_method_function  # noqa E402
 
 
-class test_enrichment(unittest.TestCase):
+class testEnrichment(unittest.TestCase):
     @mock_s3
     def test_get_from_s3(self):
         client = boto3.client(
