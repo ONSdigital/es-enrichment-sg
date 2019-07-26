@@ -47,6 +47,7 @@ jsonpatch==1.23
 jsonpickle==1.2
 jsonpointer==2.0
 jsonschema==2.6.0
+marshmallow==2.19.5
 markupsafe==1.1.1
 mccabe==0.6.1
 mock==3.0.5
