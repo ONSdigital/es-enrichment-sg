@@ -188,9 +188,21 @@ def data_enrichment(
     period_column,
 ):
     """
+    Does the enrichment process by merging together several datasets.
+    Checks for marine mismatch, unallocated county,
+    and unallocated region are performed at this point.
     :param data_df: DataFrame of data to be enriched - dataframe
     :param responder_lookup_df: Responder lookup DataFrame (map responder code -> county code) - dataframe
     :param county_lookup_df: County lookup DataFrame (map county code -> county name) - dataframe
+    :param identifier_column: Column representing unique id (reponder_id)
+    :param county_lookup_column_1: Column from county lookup file (reference) - String
+    :param county_lookup_column_2: Column from county lookup file (region) - String
+    :param county_lookup_column_3: Column from county lookup file (county) - String
+    :param county_lookup_column_4: Column from county lookup file (marine) - String
+    :param marine_mismatch_check: True/False - Should check be done  - String
+    :param missing_county_check: True/False - Should check be done  - String
+    :param missing_region_check: True/False - Should check be done  - String
+    :param period_column: Column that holds period. (period) - String
     :return: (Enriched_data - DataFrame:DataFrame of enriched data, Anomalies - DataFrame: DF containing info about data anomalies detected in the process.)
     """
 

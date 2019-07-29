@@ -1,4 +1,4 @@
-import os
+import os  # noqa F401
 from moto import mock_sqs, mock_sns, mock_s3, mock_lambda
 import boto3
 import json
@@ -12,7 +12,7 @@ import enrichment_wrangler as lambda_wrangler_function  # noqa E402
 import enrichment_method as lambda_method_function  # noqa E402
 
 
-class testEnrichment(unittest.TestCase):
+class TestEnrichment(unittest.TestCase):
     @mock_s3
     def test_get_from_s3(self):
         client = boto3.client(
@@ -92,7 +92,7 @@ class testEnrichment(unittest.TestCase):
         sqs = boto3.resource("sqs", region_name="eu-west-2")
         sqs.create_queue(QueueName="test_queue")
         queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-        testdata = ""
+
         with open("tests/fixtures/test_data.json", "r") as file:
             testdata = file.read()
         testdata = pd.DataFrame(json.loads(testdata))
@@ -190,7 +190,6 @@ class testEnrichment(unittest.TestCase):
 
     def test_marine_mismatch_detector(self):
         # one row in test data has been altered to trigger this.
-        testdata = ""
         with open("tests/fixtures/test_data.json", "r") as file:
             testdata = file.read()
         with open("tests/fixtures/county_marine_lookup.json", "r") as file:
@@ -308,7 +307,6 @@ class testEnrichment(unittest.TestCase):
 
             test_output = lambda_method_function.lambda_handler(testdata, "")
             test_output = pd.read_json(test_output["data"])
-            print(test_output.columns.values)
             assert "county" in test_output.columns.values
             assert "county_name" in test_output.columns.values
 
@@ -321,10 +319,12 @@ class testEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_method_function.os.environ, {"queue_url": queue_url}
         ):
-            lambda_method_function.lambda_handler(
+            out = lambda_method_function.lambda_handler(
                 {"RuntimeVariables": {"checkpoint": 666}}, None
             )
             self.assertRaises(ValueError)
+            assert(out['error'].__contains__
+                   ("""ValueError: Error validating environment params:"""))
 
     @mock_sqs
     def test_marshmallow_raises_wrangler_exception(self):
@@ -336,7 +336,9 @@ class testEnrichment(unittest.TestCase):
             lambda_wrangler_function.os.environ,
             {"checkpoint": "1", "queue_url": queue_url},
         ):
-            lambda_wrangler_function.lambda_handler(
+            out = lambda_wrangler_function.lambda_handler(
                 {"RuntimeVariables": {"checkpoint": 666}}, None
             )
             self.assertRaises(ValueError)
+            assert(out['error'].__contains__
+                   ("""ValueError: Error validating environment params:"""))
