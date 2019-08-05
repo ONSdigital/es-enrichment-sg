@@ -1,0 +1,252 @@
+[
+ {
+   "county_name": "CLEVELAND",
+   "region": 1,
+   "county": 1,"marine": "y"
+   },
+ {
+   "county_name": "DURHAM",
+   "region": 1,
+   "county": 2,"marine":"n" },
+ {
+   "county_name": "NORTHUMBERLAND",
+   "region": 1,
+   "county": 4,"marine":"n" },
+ {
+   "county_name": "TYNE & WEAR",
+   "region": 1,
+   "county": 5,"marine":"y" },
+ {
+   "county_name": "HUMBERSIDE",
+   "region": 2,
+   "county": 6,"marine":"n" },
+ {
+   "county_name": "NORTH YORKSHIRE",
+   "region": 2,
+   "county": 7,"marine":"n" },
+ {
+   "county_name": "SOUTH YORKSHIRE",
+   "region": 2,
+   "county": 8,"marine":"n" },
+ {
+   "county_name": "WEST YORKSHIRE",
+   "region": 2,
+   "county": 9,"marine":"n" },
+ {
+   "county_name": "CUMBRIA",
+   "region": 3,
+   "county": 3,"marine":"n" },
+ {
+   "county_name": "CHESHIRE",
+   "region": 3,
+   "county": 43,"marine":"n" },
+ {
+   "county_name": "GREATER MANCHESTER",
+   "region": 3,
+   "county": 44,"marine":"n" },
+ {
+   "county_name": "MERSEYSIDE",
+   "region": 3,
+   "county": 45,"marine":"y" },
+ {
+   "county_name": "LANCASHIRE",
+   "region": 3,
+   "county": 46,"marine":"n" },
+ {
+   "county_name": "HEREFORD",
+   "region": 5,
+   "county": 38,"marine":"n" },
+ {
+   "county_name": "SHROPSHIRE",
+   "region": 5,
+   "county": 39,"marine":"n" },
+ {
+   "county_name": "STAFFORDSHIRE",
+   "region": 5,
+   "county": 40,"marine":"n" },
+ {
+   "county_name": "WARWICKSHIRE",
+   "region": 5,
+   "county": 41,"marine":"n" },
+ {
+   "county_name": "WEST MIDLANDS",
+   "region": 5,
+   "county": 42,"marine":"n" },
+ {
+   "county_name": "WORCESTER",
+   "region": 5,
+   "county": 65,"marine":"n" },
+ {
+   "county_name": "DERBYSHIRE",
+   "region": 6,
+   "county": 10,"marine":"n" },
+ {
+   "county_name": "LEICESTERSHIRE",
+   "region": 6,
+   "county": 11,"marine":"n" },
+ {
+   "county_name": "LINCOLNSHIRE",
+   "region": 6,
+   "county": 12,"marine":"n" },
+ {
+   "county_name": "NORTHAMPTONSHIRE",
+   "region": 6,
+   "county": 13,"marine":"n" },
+ {
+   "county_name": "NOTTINGHAMSHIRE",
+   "region": 6,
+   "county": 14,"marine":"n" },
+ {
+   "county_name": "CAMBRIDGESHIRE",
+   "region": 7,
+   "county": 15,"marine":"n" },
+ {
+   "county_name": "NORFOLK",
+   "region": 7,
+   "county": 16,"marine":"n" },
+ {
+   "county_name": "SUFFOLK",
+   "region": 7,
+   "county": 17,"marine":"y" },
+ {
+   "county_name": "BEDFORDSHIRE",
+   "region": 7,
+   "county": 19,"marine":"n" },
+ {
+   "county_name": "ESSEX",
+   "region": 7,
+   "county": 20,"marine":"y" },
+ {
+   "county_name": "HERTFORDSHIRE",
+   "region": 7,
+   "county": 21,"marine":"n" },
+ {
+   "county_name": "GREATER LONDON",
+   "region": 9,
+   "county": 18,"marine":"y" },
+ {
+   "county_name": "KENT",
+   "region": 9,
+   "county": 22,"marine":"y" },
+ {
+   "county_name": "SURREY",
+   "region": 9,
+   "county": 23,"marine":"n" },
+ {
+   "county_name": "EAST SUSSEX",
+   "region": 9,
+   "county": 24,"marine":"y" },
+ {
+   "county_name": "WEST SUSSEX",
+   "region": 9,
+   "county": 25,"marine":"y" },
+ {
+   "county_name": "BERKSHIRE",
+   "region": 9,
+   "county": 26,"marine":"n" },
+ {
+   "county_name": "BUCKINGHAMSHIRE",
+   "region": 9,
+   "county": 27,"marine":"n" },
+ {
+   "county_name": "HAMPSHIRE",
+   "region": 9,
+   "county": 28,"marine":"y" },
+ {
+   "county_name": "ISLE OF WIGHT",
+   "region": 9,
+   "county": 29,"marine":"y" },
+ {
+   "county_name": "OXFORDSHIRE",
+   "region": 9,
+   "county": 30,"marine":"n" },
+ {
+   "county_name": "AVON",
+   "region": 10,
+   "county": 31,"marine":"y" },
+ {
+   "county_name": "CORNWALL",
+   "region": 10,
+   "county": 32,"marine":"n" },
+ {
+   "county_name": "DEVON",
+   "region": 10,
+   "county": 33,"marine":"n" },
+ {
+   "county_name": "DORSET",
+   "region": 10,
+   "county": 34,"marine":"y" },
+ {
+   "county_name": "GLOUCESTER",
+   "region": 10,
+   "county": 35,"marine":"n" },
+ {
+   "county_name": "SOMERSET",
+   "region": 10,
+   "county": 36,"marine":"n" },
+ {
+   "county_name": "WILTSHIRE",
+   "region": 10,
+   "county": 37,"marine":"n" },
+ {
+   "county_name": "CLWYD",
+   "region": 11,
+   "county": 47,"marine":"n" },
+ {
+   "county_name": "DYFED",
+   "region": 11,
+   "county": 48,"marine":"y" },
+ {
+   "county_name": "SOUTH GLAMORGAN",
+   "region": 11,
+   "county": 49,"marine":"y" },
+ {
+   "county_name": "MID GLAMORGAN",
+   "region": 11,
+   "county": 50,"marine":"y" },
+ {
+   "county_name": "WEST GLAMORGAN",
+   "region": 11,
+   "county": 51,"marine":"y" },
+ {
+   "county_name": "GWENT",
+   "region": 11,
+   "county": 52,"marine":"y" },
+ {
+   "county_name": "GWYNEDD",
+   "region": 11,
+   "county": 53,"marine":"y" },
+ {
+   "county_name": "POWYS",
+   "region": 11,
+   "county": 54,"marine":"n" },
+ {
+   "county_name": "SOUTH OF SCOTLAND",
+   "region": 12,
+   "county": 57,"marine":"n" },
+ {
+   "county_name": "NORTH EAST SCOTLAND",
+   "region": 12,
+   "county": 59,"marine":"n" },
+ {
+   "county_name": "HIGHLANDS",
+   "region": 12,
+   "county": 60,"marine":"n" },
+ {
+   "county_name": "ISLAND AREAS",
+   "region": 12,
+   "county": 61,"marine":"n" },
+ {
+   "county_name": "EAST CENTRAL SCOTLAND",
+   "region": 12,
+   "county": 62,"marine":"n" },
+ {
+   "county_name": "WEST CENTRAL SCOTLAND",
+   "region": 12,
+   "county": 63,"marine":"n" },
+ {
+   "county_name": "TAYSIDE & FIFE",
+   "region": 12,
+   "county": 64,"marine":"n"
+ }
+]
