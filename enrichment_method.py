@@ -36,7 +36,7 @@ class EnvironSchema(Schema):
 
 def lambda_handler(event, context):
     """
-    Performs enrichment process, joining 2 lookups onto data and detecting anomalies
+    Performs enrichment process, joining 2 lookups onto data and detecting anomalies # noqa: E501
     :param event: Json string representing input - String
     :param context:
     :return final_output: Json string representing enriched dataframe - String
@@ -119,7 +119,7 @@ def marine_mismatch_detector(
     identifier_column,
 ):
     """
-    Detects references that are producing marine but from a county that doesnt produce marine
+    Detects references that are producing marine but from a county that doesnt produce marine  # noqa: E501
     :param data: Input data after having been merged with responder_county_lookup - DataFrame
     :param county_lookup_df: County_marine_lookup dataframe - DataFrame
     :param county_lookup_column_3: Column from county lookup to join on (county) - String
@@ -147,7 +147,7 @@ def marine_mismatch_detector(
 
 def missing_county_detector(data, county_lookup_column_3, identifier_column):
     """
-    Detects any references that didnt gain a county on the join with the county lookup
+    Detects any references that didnt gain a county on the join with the county lookup # noqa: E501
     :param data: Input data after being combined with responder_county_lookup - DataFrame
     :param county_lookup_column_3: Column from county lookup to join on (county) - String
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
@@ -161,7 +161,7 @@ def missing_county_detector(data, county_lookup_column_3, identifier_column):
 
 def missing_region_detector(data, county_lookup_column_2, identifier_column):
     """
-    Detects any references that do not have a region after merge with county marine lookup
+    Detects any references that do not have a region after merge with county marine lookup # noqa: E501
     :param data: Input data after being combined with responder_county_lookup and county_marine_lookup - DataFrame
     :param county_lookup_column_2: Column from county lookup that contains region(region) - String
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
@@ -188,7 +188,7 @@ def data_enrichment(
     period_column,
 ):
     """
-    Does the enrichment process by merging together several datasets.
+    Does the enrichment process by merging together several datasets. # noqa: E501
     Checks for marine mismatch, unallocated county,
     and unallocated region are performed at this point.
     :param data_df: DataFrame of data to be enriched - dataframe

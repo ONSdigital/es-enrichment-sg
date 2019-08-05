@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import random
 from marshmallow import Schema, fields
+import logging
 
 
 def _get_traceback(exception):
@@ -77,55 +78,61 @@ def lambda_handler(event, context):
                     andor indication of error message.
     """
     try:
+        logger = logging.getLogger("Enrichment")
+        logger.info("Enrichment Begun")
+
         checkpoint = event["RuntimeVariables"]["checkpoint"]
         schema = EnvironSchema()
         config, errors = schema.load(os.environ)
         if errors:
+            logger.error(f"Error validating environment params: {errors}")
             raise ValueError(f"Error validating environment params: {errors}")
 
         # S3
         bucket_name = config["bucket_name"]
         input_data = config["input_data"]
 
-        # Set up client
-        lambda_client = boto3.client("lambda", region_name="eu-west-2")
-
-        # Sqs
         queue_url = config["queue_url"]
 
-        # Sns
         arn = config["arn"]
 
         sqs_messageid_name = config["sqs_messageid_name"]
         method_name = config["method_name"]
 
         identifier_column = config["identifier_column"]
+        logger.info("Retrieved configuration variables")
+        # Set up client
+        lambda_client = boto3.client("lambda", region_name="eu-west-2")
 
         data_df = get_from_s3(bucket_name, input_data)
+
+        logger.info("Retrieved data from s3")
         wrangled_data = wrangle_data(data_df, identifier_column)
+        logger.info("Data Wrangled")
 
         response = lambda_client.invoke(
             FunctionName=method_name, Payload=json.dumps(wrangled_data)
         )
+        logger.info("Method Called")
         json_response = response.get("Payload").read().decode("utf-8")
+        logger.info("Json extracted from method response.")
 
         final_output = json.loads(json_response)
         anomalies = final_output["anomalies"]
         final_output = final_output["data"]
 
         send_sqs_message(queue_url, final_output, sqs_messageid_name)
-
         send_sns_message(arn, anomalies, checkpoint)
         checkpoint = checkpoint + 1
 
     except Exception as exc:
-
+        logger.error("An error has occured during wrangling")
         return {
             "success": False,
             "checkpoint": checkpoint,
             "error": "Unexpected Wrangler exception {}".format(_get_traceback(exc)),
         }
-
+    logger.info("Wrangler completed succesfully")
     return {"success": True, "checkpoint": checkpoint}
 
 
@@ -152,12 +159,12 @@ def send_sns_message(arn, anomalies, checkpoint):
         "message": "Completed Enrichment",
     }
 
-    sns.publish(TargetArn=arn, Message=json.dumps(sns_message))
+    return sns.publish(TargetArn=arn, Message=json.dumps(sns_message))
 
 
 def wrangle_data(data_df, identifier_column):
     """
-    Prepares data for the enrichment step. May not be necessary going forward.
+    Prepares data for the enrichment step. May not be necessary going forward. # noqa: E501
     Renames a column and returns df as json
     :param data_df: Main input data to process - DataFrame
     :param identifier_column: The name of the column representing unique id

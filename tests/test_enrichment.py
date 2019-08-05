@@ -53,7 +53,9 @@ class TestEnrichment(unittest.TestCase):
             sns = boto3.client("sns", region_name="eu-west-2")
             topic = sns.create_topic(Name="bloo")
             topic_arn = topic["TopicArn"]
-            lambda_wrangler_function.send_sns_message(topic_arn, "", "6")
+
+            result = lambda_wrangler_function.send_sns_message(topic_arn, "", "6")
+            assert(result['ResponseMetadata']['HTTPStatusCode'] == 200)
 
     @mock_sqs
     @mock_lambda
