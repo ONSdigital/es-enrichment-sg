@@ -7,10 +7,10 @@ import unittest
 import pandas as pd
 import sys
 
+# docker issue means that this line has to be placed here.
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
 import enrichment_wrangler as lambda_wrangler_function  # noqa E402
 import enrichment_method as lambda_method_function  # noqa E402
-
 
 class TestEnrichment(unittest.TestCase):
     @mock_s3
@@ -82,8 +82,9 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.get_from_s3") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, None
+                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
                 )
+                print(response)
                 assert "success" in response
                 assert response["success"] is False
 
@@ -129,7 +130,7 @@ class TestEnrichment(unittest.TestCase):
                             "Payload": StreamingBody(file, 4878)
                         }
                         response = lambda_wrangler_function.lambda_handler(
-                            {"RuntimeVariables": {"checkpoint": 666}}, None
+                            {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
                         )
                         assert "success" in response
                         assert response["success"] is True
@@ -163,7 +164,7 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_method_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, None
+                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -308,6 +309,7 @@ class TestEnrichment(unittest.TestCase):
                 testdata = file.read()
 
             test_output = lambda_method_function.lambda_handler(testdata, "")
+            print(test_output)
             test_output = pd.read_json(test_output["data"])
             assert "county" in test_output.columns.values
             assert "county_name" in test_output.columns.values
@@ -322,11 +324,11 @@ class TestEnrichment(unittest.TestCase):
             lambda_method_function.os.environ, {"queue_url": queue_url}
         ):
             out = lambda_method_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, None
+                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
             )
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
-                   ("""ValueError: Error validating environment params:"""))
+                   ("""Parameter validation error"""))
 
     @mock_sqs
     def test_marshmallow_raises_wrangler_exception(self):
@@ -339,8 +341,17 @@ class TestEnrichment(unittest.TestCase):
             {"checkpoint": "1", "queue_url": queue_url},
         ):
             out = lambda_wrangler_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, None
+                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
             )
+            print(out)
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
-                   ("""ValueError: Error validating environment params:"""))
+                   ("""Parameter validation error"""))
+
+    def test_for_bad_data(self):
+        with mock.patch.dict(
+            lambda_wrangler_function.os.environ,
+            {"enrichment_column": "enrich", "county": "19"},
+        ):
+            response = lambda_method_function.lambda_handler("", {"aws_request_id": "666"})
+            assert response["error"].__contains__("""Parameter validation error""")

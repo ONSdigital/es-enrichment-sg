@@ -3,21 +3,9 @@ import boto3
 import pandas as pd
 import traceback
 import os
+import logging
 from marshmallow import Schema, fields
-
-
-def _get_traceback(exception):
-    """
-    Given an exception, returns the traceback as a string.
-    :param exception: Exception object
-    :return: string
-    """
-    return "".join(
-        traceback.format_exception(
-            etype=type(exception), value=exception, tb=exception.__traceback__
-        )
-    )
-
+from botocore.exceptions import ClientError
 
 class EnvironSchema(Schema):
     bucket_name = fields.Str(required=True)
@@ -41,41 +29,57 @@ def lambda_handler(event, context):
     :param context:
     :return final_output: Json string representing enriched dataframe - String
     """
+    # set up logger
+    current_module = "Enrichment - Method"
+    error_message = ''
+    log_message = ''
+    logger = logging.getLogger("Enrichment")
+    logger.setLevel(10)
     try:
+        logger.info("Enrichment Method Begun")
+
         schema = EnvironSchema()
         config, errors = schema.load(os.environ)
         if errors:
+            logger.error(f"Error validating environment params: {errors}")
             raise ValueError(f"Error validating environment params: {errors}")
+
+        logger.info("Validated params.")
 
         bucket_name = config["bucket_name"]
         responder_lookup_file = config["responder_lookup_file"]
         county_lookup_file = config["county_lookup_file"]
-
         identifier_column = config["identifier_column"]
-
         county_lookup_column_1 = config["county_lookup_column_1"]
         county_lookup_column_2 = config["county_lookup_column_2"]
         county_lookup_column_3 = config["county_lookup_column_3"]
         county_lookup_column_4 = config["county_lookup_column_4"]
-
         period_column = config["period_column"]
-
         marine_mismatch_check = config["marine_mismatch_check"]
         missing_county_check = config["missing_county_check"]
         missing_region_check = config["missing_region_check"]
+
+        logger.info("Retrieved configuration variables.")
+
         # Set up clients
         s3 = boto3.resource("s3", region_name="eu-west-2")
         # Reads in responder lookup file
         responder_object = s3.Object(bucket_name, responder_lookup_file)
         responder_content = responder_object.get()["Body"].read()
 
+        logger.info("Retrieved responder lookup file from S3.")
+
         # Reads in county lookup file
         county_object = s3.Object(bucket_name, county_lookup_file)
         county_content = county_object.get()["Body"].read()
 
+        logger.info("Retrieved county lookup file from S3.")
+
         input_data = pd.read_json(event)
         responder_lookup = pd.read_json(responder_content)
         county_lookup = pd.read_json(county_content)
+
+        logger.info("JSON converted to Pandas DF(s).")
 
         enriched_df, anomalies = data_enrichment(
             input_data,
@@ -92,22 +96,63 @@ def lambda_handler(event, context):
             period_column,
         )
 
+        logger.info("Enrichment function ran successfully.")
+
         json_out = enriched_df.to_json(orient="records")
 
         anomaly_out = anomalies.to_json(orient="records")
+
+        logger.info("DF(s) converted back to JSON.")
 
         combined_out = {"data": json_out, "anomalies": anomaly_out}
 
         final_output = json.loads(json.dumps(combined_out))
 
-    except Exception as exc:
-
-        return {
-            "success": False,
-            "error": "Unexpected method exception {}".format(_get_traceback(exc)),
-        }
+    # raise value validation error
+    except ValueError as e:
+        error_message = "Parameter validation error" + current_module + " |- " + str(e.args) \
+                        + " | Request ID: " + str(context['aws_request_id'])
+        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
+    # raise client based error
+    except ClientError as e:
+        error_message = "AWS Error (" + str(e.response['Error']['Code']) \
+                        + ") " + current_module + " |- " + str(e.args) \
+                        + " | Request ID: " + str(context['aws_request_id'])
+        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
+    # raise key/index error
+    except KeyError as e:
+        error_message = "Key Error in " + current_module + " |- " + \
+                        str(e.args) + " | Request ID: " \
+                        + str(context['aws_request_id'])
+        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
+    # general exception
+    except Exception as e:
+        error_message = "General Error in " + current_module +  \
+                            " ("+ str(type(e)) +") |- " + str(e.args) + \
+                            " | Request ID: " + str(context['aws_request_id'])
+        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
+    finally:
+        if(len(error_message)) > 0:
+            logger.error(log_message)
+            return {"success": False, "error": error_message}
+        else:
+            logger.info("Successfully completed module: " + current_module)
+            return final_output
 
     return final_output
+
+
+def _get_traceback(exception):
+    """
+    Given an exception, returns the traceback as a string.
+    :param exception: Exception object
+    :return: string
+    """
+    return "".join(
+        traceback.format_exception(
+            etype=type(exception), value=exception, tb=exception.__traceback__
+        )
+    )
 
 
 def marine_mismatch_detector(
