@@ -7,6 +7,7 @@ import logging
 from marshmallow import Schema, fields
 from botocore.exceptions import ClientError
 
+
 class EnvironSchema(Schema):
     bucket_name = fields.Str(required=True)
     responder_lookup_file = fields.Str(required=True)
@@ -63,6 +64,7 @@ def lambda_handler(event, context):
 
         # Set up clients
         s3 = boto3.resource("s3", region_name="eu-west-2")
+
         # Reads in responder lookup file
         responder_object = s3.Object(bucket_name, responder_lookup_file)
         responder_content = responder_object.get()["Body"].read()
@@ -110,8 +112,9 @@ def lambda_handler(event, context):
 
     # raise value validation error
     except ValueError as e:
-        error_message = "Parameter validation error" + current_module + " |- " + str(e.args) \
-                        + " | Request ID: " + str(context['aws_request_id'])
+        error_message = "Parameter validation error" + current_module \
+                        + " |- " + str(e.args) + " | Request ID: " \
+                        + str(context['aws_request_id'])
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # raise client based error
     except ClientError as e:
@@ -128,7 +131,7 @@ def lambda_handler(event, context):
     # general exception
     except Exception as e:
         error_message = "General Error in " + current_module +  \
-                            " ("+ str(type(e)) +") |- " + str(e.args) + \
+                            " (" + str(type(e)) + ") |- " + str(e.args) + \
                             " | Request ID: " + str(context['aws_request_id'])
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     finally:
@@ -138,8 +141,6 @@ def lambda_handler(event, context):
         else:
             logger.info("Successfully completed module: " + current_module)
             return final_output
-
-    return final_output
 
 
 def _get_traceback(exception):

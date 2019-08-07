@@ -8,6 +8,7 @@ import logging
 from marshmallow import Schema, fields
 from botocore.exceptions import ClientError, IncompleteReadError
 
+
 class EnvironSchema(Schema):
     bucket_name = fields.Str(required=True)
     input_data = fields.Str(required=True)
@@ -86,18 +87,16 @@ def lambda_handler(event, context):
         checkpoint = checkpoint + 1
     # raise value validation error
     except ValueError as e:
-        error_message = "Parameter validation error" + current_module + " |- " + str(e.args) \
-                        + " | Request ID: " + str(context['aws_request_id'])
+        error_message = "Parameter validation error" + current_module \
+                        + " |- " + str(e.args) + " | Request ID: " \
+                        + str(context['aws_request_id'])
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # raise client based error
     except ClientError as e:
-        try:
-            error_message = "AWS Error (" + str(e.response['Error']['Code']) \
-                            + ") " + current_module + " |- " + str(e.args) \
-                            + " | Request ID: " + str(context['aws_request_id'])
-            log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-        except Exception as e:
-            print(e)
+        error_message = "AWS Error (" + str(e.response['Error']['Code']) \
+                        + ") " + current_module + " |- " + str(e.args) \
+                        + " | Request ID: " + str(context['aws_request_id'])
+        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # raise key/index error
     except KeyError as e:
         error_message = "Key Error in " + current_module + " |- " + \
@@ -106,14 +105,15 @@ def lambda_handler(event, context):
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # raise error in lambda response
     except IncompleteReadError as e:
-        error_message = "Incomplete Lambda response encountered in " + current_module + " |- " + \
+        error_message = "Incomplete Lambda response encountered in " \
+                        + current_module + " |- " + \
                         str(e.args) + " | Request ID: " \
                         + str(context['aws_request_id'])
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # general exception
     except Exception as e:
         error_message = "General Error in " + current_module +  \
-                            " ("+ str(type(e)) +") |- " + str(e.args) + \
+                            " (" + str(type(e)) + ") |- " + str(e.args) + \
                             " | Request ID: " + str(context['aws_request_id'])
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     finally:
