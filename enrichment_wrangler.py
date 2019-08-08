@@ -125,20 +125,6 @@ def lambda_handler(event, context):
             return {"success": True, "checkpoint": checkpoint}
 
 
-def _get_traceback(exception):
-    """
-    Given an exception, returns the traceback as a string.
-    :param exception: Exception object
-    :return: string
-    """
-
-    return "".join(
-        traceback.format_exception(
-            etype=type(exception), value=exception, tb=exception.__traceback__
-        )
-    )
-
-
 def get_from_s3(bucket_name, key):
     """
     Given the name of the bucket and the filename(key), this function will

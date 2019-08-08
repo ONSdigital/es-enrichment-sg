@@ -32,10 +32,6 @@ class TestEnrichment(unittest.TestCase):
 
         assert test_dataframe.shape[0] == 8
 
-    def test_get__wrangler_traceback(self):
-        traceback = lambda_wrangler_function._get_traceback(Exception("Mike"))
-        assert traceback == "Exception: Mike\n"
-
     @mock_sqs
     def test_sqs_messages_send(self):
         sqs = boto3.resource("sqs", region_name="eu-west-2")
@@ -187,10 +183,6 @@ class TestEnrichment(unittest.TestCase):
                 )
                 assert "success" in response
                 assert response["success"] is False
-
-    def test_get__method_traceback(self):
-        traceback = lambda_method_function._get_traceback(Exception("Mike"))
-        assert traceback == "Exception: Mike\n"
 
     def test_missing_county_detector(self):
         data = pd.DataFrame(

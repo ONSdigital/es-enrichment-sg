@@ -143,19 +143,6 @@ def lambda_handler(event, context):
             return final_output
 
 
-def _get_traceback(exception):
-    """
-    Given an exception, returns the traceback as a string.
-    :param exception: Exception object
-    :return: string
-    """
-    return "".join(
-        traceback.format_exception(
-            etype=type(exception), value=exception, tb=exception.__traceback__
-        )
-    )
-
-
 def marine_mismatch_detector(
     data,
     county_lookup_df,
