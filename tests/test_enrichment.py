@@ -7,6 +7,7 @@ import unittest
 import pandas as pd
 import sys
 
+# docker issue means that this line has to be placed here.
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
 import enrichment_wrangler as lambda_wrangler_function  # noqa E402
 import enrichment_method as lambda_method_function  # noqa E402
@@ -30,10 +31,6 @@ class TestEnrichment(unittest.TestCase):
         test_dataframe = lambda_wrangler_function.get_from_s3("MIKE", "123")
 
         assert test_dataframe.shape[0] == 8
-
-    def test_get__wrangler_traceback(self):
-        traceback = lambda_wrangler_function._get_traceback(Exception("Mike"))
-        assert traceback == "Exception: Mike\n"
 
     @mock_sqs
     def test_sqs_messages_send(self):
@@ -82,7 +79,7 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.get_from_s3") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, None
+                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -112,9 +109,7 @@ class TestEnrichment(unittest.TestCase):
                 "sqs_messageid_name": "testytest Mctestytestytesttest",
             },
         ):
-
             from botocore.response import StreamingBody
-
             with mock.patch("enrichment_wrangler.get_from_s3") as mock_s3:
                 mock_s3.return_value = testdata
                 with mock.patch(
@@ -129,17 +124,38 @@ class TestEnrichment(unittest.TestCase):
                             "Payload": StreamingBody(file, 4878)
                         }
                         response = lambda_wrangler_function.lambda_handler(
-                            {"RuntimeVariables": {"checkpoint": 666}}, None
+                            {"RuntimeVariables": {"checkpoint": 666}},
+                            {"aws_request_id": "666"}
                         )
                         assert "success" in response
                         assert response["success"] is True
 
-    # # Method Tests
+    @mock_sqs
+    def test_wrangler_client_error(self):
+        with mock.patch.dict(
+            lambda_wrangler_function.os.environ,
+            {
+                "arn": "mike",
+                "bucket_name": "mike",
+                "checkpoint": "3",
+                "error_handler_arn": "itsabad",
+                "identifier_column": "responder_id",
+                "input_data": "test_data.json",
+                "method_name": "enrichment_method",
+                "queue_url": "Invalid queue url",
+                "sqs_messageid_name": "testytest Mctestytestytesttest"
+            },
+        ):
+            response = lambda_wrangler_function.lambda_handler(
+                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                )
+            assert "success" in response
+            assert response["success"] is False
+            assert response["error"].__contains__("""AWS Error""")
+
     @mock_sqs
     @mock_lambda
     def test_catch_method_exception(self):
-        # Method
-
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
@@ -163,14 +179,10 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_method_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, None
+                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
                 )
                 assert "success" in response
                 assert response["success"] is False
-
-    def test_get__method_traceback(self):
-        traceback = lambda_method_function._get_traceback(Exception("Mike"))
-        assert traceback == "Exception: Mike\n"
 
     def test_missing_county_detector(self):
         data = pd.DataFrame(
@@ -322,11 +334,11 @@ class TestEnrichment(unittest.TestCase):
             lambda_method_function.os.environ, {"queue_url": queue_url}
         ):
             out = lambda_method_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, None
+                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
             )
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
-                   ("""ValueError: Error validating environment params:"""))
+                   ("""Parameter validation error"""))
 
     @mock_sqs
     def test_marshmallow_raises_wrangler_exception(self):
@@ -339,8 +351,44 @@ class TestEnrichment(unittest.TestCase):
             {"checkpoint": "1", "queue_url": queue_url},
         ):
             out = lambda_wrangler_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, None
+                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
             )
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
-                   ("""ValueError: Error validating environment params:"""))
+                   ("""Parameter validation error"""))
+
+    def test_for_bad_data(self):
+        with mock.patch.dict(
+            lambda_wrangler_function.os.environ,
+            {"enrichment_column": "enrich", "county": "19"},
+        ):
+            response = lambda_method_function.lambda_handler(
+                "", {"aws_request_id": "666"}
+            )
+            assert response["error"].__contains__("""Parameter validation error""")
+
+    @mock_s3
+    def test_method_client_error(self):
+        with mock.patch.dict(
+            lambda_method_function.os.environ,
+            {
+                "bucket_name": "MIKE",
+                "county_lookup_column_1": "county_name",
+                "county_lookup_column_2": "region",
+                "county_lookup_column_3": "county",
+                "county_lookup_column_4": "marine",
+                "county_lookup_file": "countylookup",
+                "error_handler_arn": "Arrgh",
+                "identifier_column": "responder_id",
+                "marine_mismatch_check": "What",
+                "missing_county_check": "eh",
+                "missing_region_check": "oh",
+                "period_column": "period",
+                "responder_lookup_file": "bad-lookup-file",
+            },
+        ):
+            response = lambda_method_function.lambda_handler(
+                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+            )
+
+            assert response["error"].__contains__("""AWS Error""")
