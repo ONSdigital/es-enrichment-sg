@@ -1,0 +1,46 @@
+---
+service: es-enrichment-sg
+provider:
+  name: aws
+  role: arn:aws:iam::014669633018:role/lambda_invoke_lambda
+  vpc:
+    securityGroupIds:
+      - sg-0c9eb46a0f8b6d258
+    subnetIds:
+      - subnet-0669bf44635dea3ec
+      - subnet-03c244c957d3ca05f
+  runtime: python3.7
+  region: eu-west-2
+  package:
+    individually: true
+
+functions:
+  deploy-enrichment-wrangler:
+    name: es-enrichment-wrangler
+    handler: enrichment_wrangler.lambda_handler
+    package:
+      include:
+        - enrichment_wrangler.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_layer:10
+      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_marshmallow:2
+    tags:
+      app: results
+#    environment:
+#      xyz: xyz
+
+  deploy-enrichment-method:
+    name: es-enrichment-method
+    handler: enrichment_method.lambda_handler
+    package:
+      include:
+        - enrichemnt_method.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_layer:10
+      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_marshmallow:2
+    tags:
+      app: results
