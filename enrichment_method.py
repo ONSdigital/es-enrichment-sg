@@ -1,7 +1,6 @@
 import json
 import boto3
 import pandas as pd
-import traceback
 import os
 import logging
 from marshmallow import Schema, fields

@@ -1,5 +1,4 @@
 import json
-import traceback
 import boto3
 import pandas as pd
 import os
