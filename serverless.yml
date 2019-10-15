@@ -28,8 +28,14 @@ functions:
       - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_marshmallow:2
     tags:
       app: results
-#    environment:
-#      xyz: xyz
+    environment:
+      bucket_name: results-s3-bucket
+      input_data: test_data_mike_1.json
+      queue_url: https://sqs.eu-west-2.amazonaws.com/014669633018/BMI_Results.fifo
+      arn: arn:aws:sns:eu-west-2:014669633018:BMIResults
+      sqs_messageid_name: enrichmentOut
+      method_name: es-enrichment-method
+      indentifier_column: responder_id
 
   deploy-enrichment-method:
     name: es-enrichment-method
