@@ -1,11 +1,12 @@
 import json
-import boto3
-import pandas as pd
+import logging
 import os
 import random
-import logging
-from marshmallow import Schema, fields
+
+import boto3
+import pandas as pd
 from botocore.exceptions import ClientError, IncompleteReadError
+from marshmallow import Schema, fields
 
 
 class EnvironSchema(Schema):
