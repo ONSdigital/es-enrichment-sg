@@ -28,6 +28,8 @@ docutils==0.14
 dparse==0.4.1
 ecdsa==0.13.2
 entrypoints==0.3
+flake8-builtins==1.4.1
+flake8-eradicate==0.2.1
 flake8-polyfill==1.0.2
 flake8==3.7.7
 future==0.17.1
@@ -101,5 +103,3 @@ werkzeug==0.15.4
 wrapt==1.11.1
 xmltodict==0.12.0
 zipp==0.5.1
-flake8-eradicate==0.2.1
-flake8-builtins==1.4.1
