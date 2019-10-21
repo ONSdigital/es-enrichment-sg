@@ -1,0 +1,52 @@
+---
+service: es-enrichment-sg
+provider:
+  name: aws
+  role: arn:aws:iam::014669633018:role/lambda_invoke_lambda
+  vpc:
+    securityGroupIds:
+        - ${file(../json_outputs/security_groups_output.json):SecurityGroups.0.GroupId}
+      subnetIds:
+        - ${file(../json_outputs/subnets_output.json):Subnets.0.SubnetId}
+        - ${file(../json_outputs/subnets_output.json):Subnets.1.SubnetId}
+  runtime: python3.7
+  region: eu-west-2
+  package:
+    individually: true
+
+functions:
+  deploy-enrichment-wrangler:
+    name: es-enrichment-wrangler
+    handler: enrichment_wrangler.lambda_handler
+    package:
+      include:
+        - enrichment_wrangler.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_layer:10
+      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_marshmallow:2
+    tags:
+      app: results
+    environment:
+      bucket_name: results-s3-bucket
+      input_data: test_data_mike_1.json
+      queue_url: https://sqs.eu-west-2.amazonaws.com/014669633018/BMI_Results.fifo
+      arn: arn:aws:sns:eu-west-2:014669633018:BMIResults
+      sqs_messageid_name: enrichmentOut
+      method_name: es-enrichment-method
+      indentifier_column: responder_id
+
+  deploy-enrichment-method:
+    name: es-enrichment-method
+    handler: enrichment_method.lambda_handler
+    package:
+      include:
+        - enrichemnt_method.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_layer:10
+      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_marshmallow:2
+    tags:
+      app: results
