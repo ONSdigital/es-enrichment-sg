@@ -7,6 +7,7 @@ import boto3
 import pandas as pd
 from botocore.exceptions import ClientError, IncompleteReadError
 from marshmallow import Schema, fields
+from esawsfunctions import funk
 
 
 class EnvironSchema(Schema):
@@ -60,7 +61,7 @@ def lambda_handler(event, context):
         # set up client
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
 
-        data_df = get_from_s3(bucket_name, input_data)
+        data_df = funk.read_dataframe_from_s3(bucket_name, input_data)
 
         logger.info("Retrieved data from s3")
         wrangled_data = wrangle_data(data_df, identifier_column)
@@ -77,13 +78,13 @@ def lambda_handler(event, context):
         anomalies = final_output["anomalies"]
         final_output = final_output["data"]
 
-        send_sqs_message(queue_url, final_output, sqs_messageid_name)
+        funk.save_data(bucket_name, file_name, final_output, queue_url, sqs_messageid_name)
 
         logger.info("Successfully sent data to sqs.")
 
-        send_sns_message(arn, anomalies, checkpoint)
+        funk.send_sns_message_with_anomalies(checkpoint, anomalies, arn, "Enrichment")
 
-        logger.info("Successfully sent data to sqs.")
+        logger.info("Successfully sent data to sns.")
         checkpoint = checkpoint + 1
     # raise value validation error
     except ValueError as e:
@@ -123,68 +124,6 @@ def lambda_handler(event, context):
         else:
             logger.info("Successfully completed module: " + current_module)
             return {"success": True, "checkpoint": checkpoint}
-
-
-def get_from_s3(bucket_name, key):
-    """
-    Given the name of the bucket and the filename(key), this function will
-    return a dataframe.
-    File to get MUST be json format.
-    :param bucket_name: Name of the s3 bucket - String
-    :param key: path & name of the file - String
-    :return data_df: Dataframe created from the json file in s3 - DataFrame
-    """
-    s3 = boto3.resource("s3", region_name="eu-west-2")
-    content_object = s3.Object(bucket_name, key)
-    file_content = content_object.get()["Body"].read().decode("utf-8")
-    json_content = json.loads(file_content)
-    data_df = pd.DataFrame(json_content)
-
-    return data_df
-
-
-def send_sqs_message(queue_url, message, sqs_messageid_name):
-    """
-    Will send an sqs message to a specified queue
-    :param queue_url: The url of the queue to send to. - String
-    :param message: The message to be sent
-                            (json string representation of dataframe) - String
-    :param sqs_messageid_name: The messageid to attach to the message - String
-    :return Nothing:
-    """
-    sqs = boto3.client("sqs", region_name="eu-west-2")
-    sqs.send_message(
-        QueueUrl=queue_url,
-        MessageBody=message,
-        MessageGroupId=sqs_messageid_name,
-        MessageDeduplicationId=str(random.getrandbits(128)),
-    )
-
-
-def send_sns_message(arn, anomalies, checkpoint):
-    """
-    Sends metadata to an sns queue:
-        Success: Whether process succeeded or not
-        module: Current module
-        checkpoint: Module number of process
-        anomalies: Data anomalies picked up during enrichment
-        (non-failing but indicate problems with data)
-        message: Summary of metadata.
-    :param arn: Url of the sns queue - String
-    :param anomalies: json string representing data anomalies - String
-    :param checkpoint: Current 'module' of process - int
-    :return Nothing:
-    """
-    sns = boto3.client("sns", region_name="eu-west-2")
-    sns_message = {
-        "success": True,
-        "module": "Enrichment",
-        "checkpoint": checkpoint,
-        "anomalies": anomalies,
-        "message": "Completed Enrichment",
-    }
-
-    return sns.publish(TargetArn=arn, Message=json.dumps(sns_message))
 
 
 def wrangle_data(data_df, identifier_column):
