@@ -1,13 +1,11 @@
 import json
 import logging
 import os
-import random
 
 import boto3
-import pandas as pd
 from botocore.exceptions import ClientError, IncompleteReadError
-from marshmallow import Schema, fields
 from esawsfunctions import funk
+from marshmallow import Schema, fields
 
 
 class EnvironSchema(Schema):
@@ -18,6 +16,7 @@ class EnvironSchema(Schema):
     sqs_messageid_name = fields.Str(required=True)
     method_name = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
+    file_name = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -48,6 +47,7 @@ def lambda_handler(event, context):
         logger.info("Validated params.")
 
         # env vars
+        file_name = config["file_name"]
         bucket_name = config["bucket_name"]
         input_data = config["input_data"]
         queue_url = config["queue_url"]
@@ -78,7 +78,8 @@ def lambda_handler(event, context):
         anomalies = final_output["anomalies"]
         final_output = final_output["data"]
 
-        funk.save_data(bucket_name, file_name, final_output, queue_url, sqs_messageid_name)
+        funk.save_data(bucket_name, file_name, str(final_output), queue_url,
+                       sqs_messageid_name)
 
         logger.info("Successfully sent data to sqs.")
 
