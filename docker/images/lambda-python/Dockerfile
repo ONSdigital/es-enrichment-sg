@@ -12,6 +12,8 @@ chown -R dockeruser:dockeruser /home/dockeruser/.cache
 RUN curl https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz | \
 tar -C /opt -xz && ln -s /opt/go/bin/go /usr/local/bin/go
 
+RUN apt-get install git
+
 COPY ${reqs}requirements.txt .
 RUN pip install --upgrade pip pipenv && \
 pip install -r ${reqs}requirements.txt
