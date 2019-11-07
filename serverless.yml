@@ -2,7 +2,7 @@
 service: es-enrichment-sg
 provider:
   name: aws
-  role: arn:aws:iam::014669633018:role/lambda_invoke_lambda
+  role: arn:aws:iam::${self:custom.accountId}:role/lambda_invoke_lambda
   vpc:
     securityGroupIds:
       - ${file(../json_outputs/security_groups_output.json):SecurityGroups.0.GroupId}
@@ -14,6 +14,10 @@ provider:
   package:
     individually: true
 
+custom:
+  accounts: ${ssm:/aws/reference/secretsmanager/results-aws-accounts~true}
+  accountId: ${self:custom.accounts.account-id}
+
 functions:
   deploy-enrichment-wrangler:
     name: es-enrichment-wrangler
@@ -24,16 +28,16 @@ functions:
       exclude:
         - ./**
     layers:
-      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_layer:10
-      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_marshmallow:2
-      - arn:aws:lambda:eu-west-2:014669633018:layer:dev-es-commonfunctions:12
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:10
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_marshmallow:2
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-commonfunctions:12
     tags:
       app: results
     environment:
       bucket_name: results-s3-bucket
       input_data: test_data_mike_1.json
-      queue_url: https://sqs.eu-west-2.amazonaws.com/014669633018/BMI_Results.fifo
-      arn: arn:aws:sns:eu-west-2:014669633018:BMIResults
+      queue_url: https://sqs.eu-west-2.amazonaws.com/${self:custom.accountId}/BMI_Results.fifo
+      arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
       sqs_messageid_name: enrichmentOut
       method_name: es-enrichment-method
       indentifier_column: responder_id
@@ -49,7 +53,7 @@ functions:
       exclude:
         - ./**
     layers:
-      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_layer:10
-      - arn:aws:lambda:eu-west-2:014669633018:layer:es_python_marshmallow:2
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:10
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_marshmallow:2
     tags:
       app: results
