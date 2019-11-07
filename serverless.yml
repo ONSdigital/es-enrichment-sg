@@ -41,7 +41,7 @@ functions:
       sqs_messageid_name: enrichmentOut
       method_name: es-enrichment-method
       indentifier_column: responder_id
-      in_file_name: strata_out.json
+      in_file_name: ingest_out.json
       out_file_name: enrichment_out.json
 
   deploy-enrichment-method:
