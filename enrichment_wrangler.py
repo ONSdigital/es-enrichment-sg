@@ -9,14 +9,16 @@ from marshmallow import Schema, fields
 
 
 class EnvironSchema(Schema):
+    checkpoint = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
-    in_file_name = fields.Str(required=True)
-    queue_url = fields.Str(required=True)
-    sns_topic_arn = fields.Str(required=True)
-    sqs_messageid_name = fields.Str(required=True)
-    method_name = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
+    in_file_name = fields.Str(required=True)
+    incoming_message_group = fields.Str(required=True)
+    method_name = fields.Str(required=True)
     out_file_name = fields.Str(required=True)
+    sqs_queue_url = fields.Str(required=True)
+    sns_topic_arn = fields.Str(required=True)
+    sqs_message_group_id = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -34,8 +36,6 @@ def lambda_handler(event, context):
     logger.setLevel(10)
     try:
         logger.info("Enrichment Wrangler Begun")
-
-        checkpoint = event["RuntimeVariables"]["checkpoint"]
         schema = EnvironSchema()
         config, errors = schema.load(os.environ)
         if errors:
@@ -45,21 +45,24 @@ def lambda_handler(event, context):
         logger.info("Validated params.")
 
         # env vars
-        out_file_name = config["out_file_name"]
+        checkpoint = config["checkpoint"]
         bucket_name = config["bucket_name"]
-        in_file_name = config["in_file_name"]
-        queue_url = config["queue_url"]
-        sns_topic_arn = config["sns_topic_arn"]
-        sqs_messageid_name = config["sqs_messageid_name"]
-        method_name = config["method_name"]
         identifier_column = config["identifier_column"]
+        in_file_name = config["in_file_name"]
+        incoming_message_group = config["incoming_message_group"]
+        method_name = config["method_name"]
+        out_file_name = config["out_file_name"]
+        sns_topic_arn = config["sns_topic_arn"]
+        sqs_message_group_id = config["sqs_message_group_id"]
+        sqs_queue_url = config["sqs_queue_url"]
 
         logger.info("Retrieved configuration variables")
 
         # set up client
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
 
-        data_df = funk.read_dataframe_from_s3(bucket_name, in_file_name)
+        data_df = funk.get_dataframe(sqs_queue_url, bucket_name, in_file_name,
+                                     incoming_message_group)
 
         logger.info("Retrieved data from s3")
         wrangled_data = wrangle_data(data_df, identifier_column)
@@ -70,26 +73,25 @@ def lambda_handler(event, context):
         )
 
         logger.info("Method Called")
-        json_response = response.get("Payload").read().decode("utf-8")
+        json_response = json.loads(response.get("Payload").read().decode("utf-8"))
         logger.info("Json extracted from method response.")
 
-        final_output = json.loads(json_response)
-        anomalies = final_output["anomalies"]
-        final_output = final_output["data"]
+        anomalies = json_response["anomalies"]
+        final_output = str(json_response["data"])
 
-        funk.save_data(bucket_name, out_file_name, str(final_output), queue_url,
-                       sqs_messageid_name)
+        funk.save_data(bucket_name, out_file_name, final_output, sqs_queue_url,
+                       sqs_message_group_id)
 
-        logger.info("Successfully sent data to sqs.")
+        logger.info("Successfully sent data to s3.")
 
-        funk.send_sns_message_with_anomalies(checkpoint, anomalies,
-                                             sns_topic_arn, "Enrichment")
+        funk.send_sns_message_with_anomalies(checkpoint, sns_topic_arn, "Enrichment.",
+                                             anomalies)
 
-        logger.info("Successfully sent data to sns.")
+        logger.info("Successfully sent message to sns.")
         checkpoint = checkpoint + 1
     # raise value validation error
     except ValueError as e:
-        error_message = "Parameter validation error" + current_module \
+        error_message = "Parameter validation error in " + current_module \
                         + " |- " + str(e.args) + " | Request ID: " \
                         + str(context['aws_request_id'])
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
