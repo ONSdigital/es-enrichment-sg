@@ -26,13 +26,12 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
-                "file_name": "Axel Filey",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
                 "queue_url": queue_url,
                 "sqs_messageid_name": "testytest Mctestytestytesttest",
@@ -57,13 +56,12 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
-                "file_name": "Axel Filey",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
                 "queue_url": queue_url,
                 "sqs_messageid_name": "testytest Mctestytestytesttest",
@@ -88,12 +86,12 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
                 "queue_url": queue_url,
                 "sqs_messageid_name": "testytest Mctestytestytesttest",
@@ -130,13 +128,12 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
-                "file_name": "PhilipeDePhile",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
                 "queue_url": queue_url,
                 "sqs_messageid_name": "testytest Mctestytestytesttest",
@@ -185,13 +182,12 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
-                "file_name": "PhilipeDePhile",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
                 "queue_url": queue_url,
                 "sqs_messageid_name": "testytest Mctestytestytesttest",
@@ -225,16 +221,15 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "file_name": "PhilipeDePhile",
-                "input_data": "test_data.json",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
-                "queue_url": "Invalid queue url",
-                "sqs_messageid_name": "testytest Mctestytestytesttest"
+                "queue_url": "aasdasdasd",
+                "sqs_messageid_name": "testytest Mctestytestytesttest",
             },
         ):
             response = lambda_wrangler_function.lambda_handler(

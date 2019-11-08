@@ -34,15 +34,16 @@ functions:
     tags:
       app: results
     environment:
+      in_file_name: test_data_mike_1.json
+      out_file_name: enrichment_out.json
       bucket_name: results-s3-bucket
-      input_data: test_data_mike_1.json
       queue_url: https://sqs.eu-west-2.amazonaws.com/${self:custom.accountId}/BMI_Results.fifo
-      arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
-      sqs_messageid_name: enrichmentOut
+      sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
+      sqs_messageid_name: enrichment-out
       method_name: es-enrichment-method
       indentifier_column: responder_id
-      in_file_name: ingest_out.json
-      out_file_name: enrichment_out.json
+      checkpoint: 3
+
 
   deploy-enrichment-method:
     name: es-enrichment-method
@@ -57,3 +58,16 @@ functions:
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_marshmallow:2
     tags:
       app: results
+    environment:
+      bucket_name: results-s3-bucket
+      responder_lookup_file: responder_county_lookup_prod.json
+      county_lookup_file: county_lookup.json
+      identifier_column: responder_id
+      county_lookup_column_1: county_name
+      county_lookup_column_2: region
+      county_lookup_column_3: county
+      county_lookup_column_4: marine
+      period_column: period
+      marine_mismatch_check: true
+      missing_county_check: true
+      missing_region_check: true
