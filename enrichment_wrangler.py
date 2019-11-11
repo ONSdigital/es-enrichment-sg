@@ -45,7 +45,7 @@ def lambda_handler(event, context):
         logger.info("Validated params.")
 
         # env vars
-        checkpoint = config["checkpoint"]
+        checkpoint = int(config["checkpoint"])
         bucket_name = config["bucket_name"]
         identifier_column = config["identifier_column"]
         in_file_name = config["in_file_name"]
@@ -84,11 +84,11 @@ def lambda_handler(event, context):
 
         logger.info("Successfully sent data to s3.")
 
-        funk.send_sns_message_with_anomalies(checkpoint, sns_topic_arn, "Enrichment.",
-                                             anomalies)
+        funk.send_sns_message_with_anomalies(checkpoint, anomalies,
+                                             sns_topic_arn, "Enrichment.")
 
         logger.info("Successfully sent message to sns.")
-        checkpoint = checkpoint + 1
+        checkpoint += 1
     # raise value validation error
     except ValueError as e:
         error_message = "Parameter validation error in " + current_module \
