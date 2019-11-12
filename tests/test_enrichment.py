@@ -147,7 +147,7 @@ class TestEnrichment(unittest.TestCase):
         ):
             from botocore.response import StreamingBody
             with mock.patch("enrichment_wrangler.funk.get_dataframe") as mock_s3:
-                mock_s3.return_value = testdata
+                mock_s3.return_value = testdata, 666
                 with mock.patch(
                     "enrichment_wrangler.boto3.client"
                 ) as mock_client:
@@ -203,7 +203,7 @@ class TestEnrichment(unittest.TestCase):
         ):
             from botocore.response import StreamingBody
             with mock.patch("enrichment_wrangler.funk.get_dataframe") as mock_s3:
-                mock_s3.return_value = testdata
+                mock_s3.return_value = testdata, 666
                 with mock.patch(
                     "enrichment_wrangler.boto3.client"
                 ) as mock_client:
