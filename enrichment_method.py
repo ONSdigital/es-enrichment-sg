@@ -25,10 +25,10 @@ class EnvironSchema(Schema):
 
 def lambda_handler(event, context):
     """
-    Performs enrichment process, joining 2 lookups onto data and detecting anomalies # noqa: E501
-    :param event: Json string representing input - String
-    :param context:
-    :return final_output: Json string representing enriched dataframe - String
+    Performs enrichment process, joining 2 lookups onto data and detecting anomalies.
+    :param event: event object.
+    :param context: Context object.
+    :return final_output: Json string representing enriched DataFrame - Type: JSON
     """
     # set up logger
     current_module = "Enrichment - Method"
@@ -37,7 +37,7 @@ def lambda_handler(event, context):
     logger = logging.getLogger("Enrichment")
     logger.setLevel(10)
     try:
-        logger.info("Enrichment Method Begun")
+        logger.info("Starting Enrichment Method")
 
         schema = EnvironSchema()
         config, errors = schema.load(os.environ)
@@ -114,25 +114,25 @@ def lambda_handler(event, context):
     except ValueError as e:
         error_message = "Parameter validation error" + current_module \
                         + " |- " + str(e.args) + " | Request ID: " \
-                        + str(context['aws_request_id'])
+                        + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # raise client based error
     except ClientError as e:
         error_message = "AWS Error (" + str(e.response['Error']['Code']) \
                         + ") " + current_module + " |- " + str(e.args) \
-                        + " | Request ID: " + str(context['aws_request_id'])
+                        + " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # raise key/index error
     except KeyError as e:
         error_message = "Key Error in " + current_module + " |- " + \
                         str(e.args) + " | Request ID: " \
-                        + str(context['aws_request_id'])
+                        + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # general exception
     except Exception as e:
         error_message = "General Error in " + current_module +  \
                             " (" + str(type(e)) + ") |- " + str(e.args) + \
-                            " | Request ID: " + str(context['aws_request_id'])
+                            " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     finally:
         if(len(error_message)) > 0:
@@ -143,14 +143,8 @@ def lambda_handler(event, context):
             return final_output
 
 
-def marine_mismatch_detector(
-    data,
-    county_lookup_df,
-    county_lookup_column_3,
-    county_lookup_column_4,
-    period_column,
-    identifier_column,
-):
+def marine_mismatch_detector(data, county_lookup_df, county_lookup_column_3,
+                             county_lookup_column_4, period_column, identifier_column):
     """
     Detects references that are producing marine but from a county that doesnt produce marine  # noqa: E501
     :param data: Input data after having been merged with responder_county_lookup - DataFrame
@@ -159,7 +153,7 @@ def marine_mismatch_detector(
     :param county_lookup_column_4: Column from county lookup representing whether county produces marine or not - String
     :param period_column: Column that holds the period - String
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
-    :return: bad_data_with_marine: Df containing information about any reference that is producing marine when it shouldnt - DataFrame
+    :return: bad_data_with_marine: Df containing information about any reference that is producing marine when it shouldn't - DataFrame
     """
     data_with_marine = pd.merge(data, county_lookup_df, on=county_lookup_column_3)
     bad_data_with_marine = data_with_marine[
@@ -206,26 +200,15 @@ def missing_region_detector(data, county_lookup_column_2, identifier_column):
     return data_without_region[[identifier_column, "issue"]]
 
 
-def data_enrichment(
-    data_df,
-    responder_lookup_df,
-    county_lookup_df,
-    identifier_column,
-    county_lookup_column_1,
-    county_lookup_column_2,
-    county_lookup_column_3,
-    county_lookup_column_4,
-    marine_mismatch_check,
-    missing_county_check,
-    missing_region_check,
-    period_column,
-):
+def data_enrichment(data_df, responder_lookup_df, county_lookup_df, identifier_column,
+                    county_lookup_column_1, county_lookup_column_2,
+                    county_lookup_column_3, county_lookup_column_4, marine_mismatch_check,
+                    missing_county_check, missing_region_check, period_column):
     """
-    Does the enrichment process by merging together several datasets. # noqa: E501
-    Checks for marine mismatch, unallocated county,
-    and unallocated region are performed at this point.
+    Does the enrichment process by merging together several datasets. Checks for marine
+    mismatch, unallocated county, and unallocated region are performed at this point.
     :param data_df: DataFrame of data to be enriched - dataframe
-    :param responder_lookup_df: Responder lookup DataFrame (map responder code -> county code) - dataframe
+    :param responder_lookup_df: Responder lookup DataFrame (map responder code -> county code) - dataframe  # noqa: E501
     :param county_lookup_df: County lookup DataFrame (map county code -> county name) - dataframe
     :param identifier_column: Column representing unique id (reponder_id)
     :param county_lookup_column_1: Column from county lookup file (reference) - String

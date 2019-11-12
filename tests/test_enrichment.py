@@ -1,6 +1,4 @@
 import json
-import os  # noqa F401
-import sys
 import unittest
 import unittest.mock as mock
 
@@ -8,11 +6,15 @@ import boto3
 import pandas as pd
 from moto import mock_lambda, mock_s3, mock_sqs
 
-import enrichment_method as lambda_method_function  # noqa E402
-import enrichment_wrangler as lambda_wrangler_function  # noqa E402
+import enrichment_method as lambda_method_function
+import enrichment_wrangler as lambda_wrangler_function
 
-# docker issue means that this line has to be placed here.
-sys.path.append(os.path.realpath(os.path.dirname(__file__) + "/.."))
+
+class MockContext():
+    aws_request_id = 666
+
+
+context_object = MockContext()
 
 
 class TestEnrichment(unittest.TestCase):
@@ -22,27 +24,27 @@ class TestEnrichment(unittest.TestCase):
         # Method
         sqs = boto3.resource("sqs", region_name="eu-west-2")
         sqs.create_queue(QueueName="test_queue")
-        queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
+        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
-                "file_name": "Axel Filey",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
-                "queue_url": queue_url,
-                "sqs_messageid_name": "testytest Mctestytestytesttest",
+                "sqs_queue_url": sqs_queue_url,
+                "sqs_message_group_id": "testytest Mctestytestytesttest",
+                "incoming_message_group": "test"
             },
         ):
             # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.funk.read_dataframe_from_s3") as mocked:
+            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -53,27 +55,27 @@ class TestEnrichment(unittest.TestCase):
         # Method
         sqs = boto3.resource("sqs", region_name="eu-west-2")
         sqs.create_queue(QueueName="test_queue")
-        queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
+        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
-                "file_name": "Axel Filey",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
-                "queue_url": queue_url,
-                "sqs_messageid_name": "testytest Mctestytestytesttest",
+                "sqs_queue_url": sqs_queue_url,
+                "sqs_message_group_id": "testytest Mctestytestytesttest",
+                "incoming_message_group": "test"
             },
         ):
             # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.funk.read_dataframe_from_s3") as mocked:
+            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mocked:
                 mocked.side_effect = KeyError("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -84,26 +86,27 @@ class TestEnrichment(unittest.TestCase):
         # Method
         sqs = boto3.resource("sqs", region_name="eu-west-2")
         sqs.create_queue(QueueName="test_queue")
-        queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
+        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
-                "queue_url": queue_url,
-                "sqs_messageid_name": "testytest Mctestytestytesttest",
+                "sqs_queue_url": sqs_queue_url,
+                "sqs_message_group_id": "testytest Mctestytestytesttest",
+                "incoming_message_group": "test"
             },
         ):
             # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.funk.read_dataframe_from_s3") as mocked:
+            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -114,7 +117,7 @@ class TestEnrichment(unittest.TestCase):
     def test_wrangles(self):
         sqs = boto3.resource("sqs", region_name="eu-west-2")
         sqs.create_queue(QueueName="test_queue")
-        queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
+        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
         client = boto3.client(
                  "s3",
                  region_name="eu-west-1",
@@ -130,20 +133,20 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
-                "file_name": "PhilipeDePhile",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
-                "queue_url": queue_url,
-                "sqs_messageid_name": "testytest Mctestytestytesttest",
+                "sqs_queue_url": sqs_queue_url,
+                "sqs_message_group_id": "testytest Mctestytestytesttest",
+                "incoming_message_group": "test"
             },
         ):
             from botocore.response import StreamingBody
-            with mock.patch("enrichment_wrangler.funk.read_dataframe_from_s3") as mock_s3:
+            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mock_s3:
                 mock_s3.return_value = testdata
                 with mock.patch(
                     "enrichment_wrangler.boto3.client"
@@ -158,8 +161,9 @@ class TestEnrichment(unittest.TestCase):
                         }
                         response = lambda_wrangler_function.lambda_handler(
                             {"RuntimeVariables": {"checkpoint": 666}},
-                            {"aws_request_id": "666"}
+                            context_object
                         )
+                        print(response)
                         assert "success" in response
                         assert response["success"] is True
 
@@ -169,7 +173,7 @@ class TestEnrichment(unittest.TestCase):
     def test_wrangles_incompletereaderror(self):
         sqs = boto3.resource("sqs", region_name="eu-west-2")
         sqs.create_queue(QueueName="test_queue")
-        queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
+        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
         client = boto3.client(
                  "s3",
                  region_name="eu-west-1",
@@ -185,20 +189,20 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "input_data": "test_data.json",
-                "file_name": "PhilipeDePhile",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
-                "queue_url": queue_url,
-                "sqs_messageid_name": "testytest Mctestytestytesttest",
+                "sqs_queue_url": sqs_queue_url,
+                "sqs_message_group_id": "testytest Mctestytestytesttest",
+                "incoming_message_group": "test"
             },
         ):
             from botocore.response import StreamingBody
-            with mock.patch("enrichment_wrangler.funk.read_dataframe_from_s3") as mock_s3:
+            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mock_s3:
                 mock_s3.return_value = testdata
                 with mock.patch(
                     "enrichment_wrangler.boto3.client"
@@ -213,10 +217,9 @@ class TestEnrichment(unittest.TestCase):
                         }
                         response = lambda_wrangler_function.lambda_handler(
                             {"RuntimeVariables": {"checkpoint": 666}},
-                            {"aws_request_id": "666"}
+                            context_object
                         )
                         assert "success" in response
-                        print(response)
                         assert response["success"] is False
                         assert("Incomplete Lambda response" in response['error'])
 
@@ -225,20 +228,20 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "arn": "mike",
+                "sns_topic_arn": "mike",
                 "bucket_name": "mike",
                 "checkpoint": "3",
-                "error_handler_arn": "itsabad",
                 "identifier_column": "responder_id",
-                "file_name": "PhilipeDePhile",
-                "input_data": "test_data.json",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
                 "method_name": "enrichment_method",
-                "queue_url": "Invalid queue url",
-                "sqs_messageid_name": "testytest Mctestytestytesttest"
+                "sqs_queue_url": "aasdasdasd",
+                "sqs_message_group_id": "testytest Mctestytestytesttest",
+                "incoming_message_group": "test"
             },
         ):
             response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
             assert "success" in response
             assert response["success"] is False
@@ -264,13 +267,14 @@ class TestEnrichment(unittest.TestCase):
                 "missing_region_check": "true",
                 "period_column": "period",
                 "responder_lookup_file": "mike.mike",
+                "incoming_message_group": "test"
             },
         ):
             # using get_from_s3 to force exception early on.
             with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_method_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -301,7 +305,7 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
                 mocked.side_effect = KeyError("SQS Failure")
                 response = lambda_method_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -450,13 +454,13 @@ class TestEnrichment(unittest.TestCase):
     def test_marshmallow_raises_method_exception(self):
         sqs = boto3.resource("sqs", region_name="eu-west-2")
         sqs.create_queue(QueueName="test_queue")
-        queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
+        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
         # Method
         with mock.patch.dict(
-            lambda_method_function.os.environ, {"queue_url": queue_url}
+            lambda_method_function.os.environ, {"sqs_queue_url": sqs_queue_url}
         ):
             out = lambda_method_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                {"RuntimeVariables": {"checkpoint": 666}}, context_object
             )
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
@@ -466,14 +470,14 @@ class TestEnrichment(unittest.TestCase):
     def test_marshmallow_raises_wrangler_exception(self):
         sqs = boto3.resource("sqs", region_name="eu-west-2")
         sqs.create_queue(QueueName="test_queue")
-        queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
+        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
         # Method
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
-            {"checkpoint": "1", "queue_url": queue_url},
+            {"checkpoint": "1", "sqs_queue_url": sqs_queue_url},
         ):
             out = lambda_wrangler_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                {"RuntimeVariables": {"checkpoint": 666}}, context_object
             )
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
@@ -485,7 +489,7 @@ class TestEnrichment(unittest.TestCase):
             {"enrichment_column": "enrich", "county": "19"},
         ):
             response = lambda_method_function.lambda_handler(
-                "", {"aws_request_id": "666"}
+                "", context_object
             )
             assert response["error"].__contains__("""Parameter validation error""")
 
@@ -510,7 +514,7 @@ class TestEnrichment(unittest.TestCase):
             },
         ):
             response = lambda_method_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                {"RuntimeVariables": {"checkpoint": 666}}, context_object
             )
 
             assert response["error"].__contains__("""AWS Error""")
