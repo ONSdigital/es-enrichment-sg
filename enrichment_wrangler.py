@@ -93,32 +93,32 @@ def lambda_handler(event, context):
     except ValueError as e:
         error_message = "Parameter validation error in " + current_module \
                         + " |- " + str(e.args) + " | Request ID: " \
-                        + str(context['aws_request_id'])
+                        + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # raise client based error
     except ClientError as e:
         error_message = "AWS Error (" + str(e.response['Error']['Code']) \
                         + ") " + current_module + " |- " + str(e.args) \
-                        + " | Request ID: " + str(context['aws_request_id'])
+                        + " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # raise key/index error
     except KeyError as e:
         error_message = "Key Error in " + current_module + " |- " + \
                         str(e.args) + " | Request ID: " \
-                        + str(context['aws_request_id'])
+                        + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # raise error in lambda response
     except IncompleteReadError as e:
         error_message = "Incomplete Lambda response encountered in " \
                         + current_module + " |- " + \
                         str(e.args) + " | Request ID: " \
-                        + str(context['aws_request_id'])
+                        + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # general exception
     except Exception as e:
         error_message = "General Error in " + current_module +  \
                             " (" + str(type(e)) + ") |- " + str(e.args) + \
-                            " | Request ID: " + str(context['aws_request_id'])
+                            " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     finally:
         if(len(error_message)) > 0:

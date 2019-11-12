@@ -10,6 +10,13 @@ import enrichment_method as lambda_method_function
 import enrichment_wrangler as lambda_wrangler_function
 
 
+class MockContext():
+    aws_request_id = 666
+
+
+context_object = MockContext()
+
+
 class TestEnrichment(unittest.TestCase):
     @mock_sqs
     @mock_lambda
@@ -37,7 +44,7 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.funk.get_dataframe") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -68,7 +75,7 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.funk.get_dataframe") as mocked:
                 mocked.side_effect = KeyError("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -99,7 +106,7 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.funk.get_dataframe") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -154,7 +161,7 @@ class TestEnrichment(unittest.TestCase):
                         }
                         response = lambda_wrangler_function.lambda_handler(
                             {"RuntimeVariables": {"checkpoint": 666}},
-                            {"aws_request_id": "666"}
+                            context_object
                         )
                         print(response)
                         assert "success" in response
@@ -210,7 +217,7 @@ class TestEnrichment(unittest.TestCase):
                         }
                         response = lambda_wrangler_function.lambda_handler(
                             {"RuntimeVariables": {"checkpoint": 666}},
-                            {"aws_request_id": "666"}
+                            context_object
                         )
                         assert "success" in response
                         assert response["success"] is False
@@ -234,7 +241,7 @@ class TestEnrichment(unittest.TestCase):
             },
         ):
             response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
             assert "success" in response
             assert response["success"] is False
@@ -267,7 +274,7 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_method_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -298,7 +305,7 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
                 mocked.side_effect = KeyError("SQS Failure")
                 response = lambda_method_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -453,7 +460,7 @@ class TestEnrichment(unittest.TestCase):
             lambda_method_function.os.environ, {"sqs_queue_url": sqs_queue_url}
         ):
             out = lambda_method_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                {"RuntimeVariables": {"checkpoint": 666}}, context_object
             )
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
@@ -470,7 +477,7 @@ class TestEnrichment(unittest.TestCase):
             {"checkpoint": "1", "sqs_queue_url": sqs_queue_url},
         ):
             out = lambda_wrangler_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                {"RuntimeVariables": {"checkpoint": 666}}, context_object
             )
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
@@ -482,7 +489,7 @@ class TestEnrichment(unittest.TestCase):
             {"enrichment_column": "enrich", "county": "19"},
         ):
             response = lambda_method_function.lambda_handler(
-                "", {"aws_request_id": "666"}
+                "", context_object
             )
             assert response["error"].__contains__("""Parameter validation error""")
 
@@ -507,7 +514,7 @@ class TestEnrichment(unittest.TestCase):
             },
         ):
             response = lambda_method_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, {"aws_request_id": "666"}
+                {"RuntimeVariables": {"checkpoint": 666}}, context_object
             )
 
             assert response["error"].__contains__("""AWS Error""")
