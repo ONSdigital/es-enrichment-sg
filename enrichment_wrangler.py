@@ -61,7 +61,7 @@ def lambda_handler(event, context):
         # set up client
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
         sqs = boto3.client("sqs", region_name='eu-west-2')
-        data_df, receipt_handle = funk.get_dataframe(sqs_queue_url, bucket_name,
+        data_df, receipt_handler = funk.get_dataframe(sqs_queue_url, bucket_name,
                                                      in_file_name, incoming_message_group)
 
         logger.info("Retrieved data from s3")
@@ -86,8 +86,8 @@ def lambda_handler(event, context):
 
         funk.send_sns_message_with_anomalies(checkpoint, anomalies,
                                              sns_topic_arn, "Enrichment.")
-        if receipt_handle:
-            sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handle)
+        if receipt_handler:
+            sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handler)
         logger.info("Successfully sent message to sns.")
         checkpoint += 1
     # raise value validation error
