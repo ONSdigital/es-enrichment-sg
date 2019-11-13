@@ -62,7 +62,8 @@ def lambda_handler(event, context):
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
         sqs = boto3.client("sqs", region_name='eu-west-2')
         data_df, receipt_handler = funk.get_dataframe(sqs_queue_url, bucket_name,
-                                                     in_file_name, incoming_message_group)
+                                                      in_file_name,
+                                                      incoming_message_group)
 
         logger.info("Retrieved data from s3")
         wrangled_data = wrangle_data(data_df, identifier_column)

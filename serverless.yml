@@ -38,7 +38,7 @@ functions:
       bucket_name: results-s3-bucket
       identifier_column: responder_id
       in_file_name: ingest_out.json
-      incoming_message_group: ingest-out
+      incoming_message_group: ingest-takeon-data-out
       method_name: es-enrichment-method
       out_file_name: enrichment_out.json
       sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
