@@ -14,9 +14,9 @@ provider:
   package:
     individually: true
   memorySize: 512
-    timeout: 10
-    tracing:
-      lambda: true
+  timeout: 10
+  tracing:
+    lambda: true
 
 custom:
   accounts: ${ssm:/aws/reference/secretsmanager/results-aws-accounts~true}
