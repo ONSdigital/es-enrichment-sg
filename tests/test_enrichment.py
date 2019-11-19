@@ -378,8 +378,8 @@ class TestEnrichment(unittest.TestCase):
                        "required": ["county"]},
                  "1": {"file_name": "countylookup",
                        "columns_to_keep": ["county_name",
-                                         "region", "county",
-                                         "marine"],
+                                           "region", "county",
+                                           "marine"],
                        "join_column": "county",
                        "required": ["region", "marine"]}},
                  "responder_id"
