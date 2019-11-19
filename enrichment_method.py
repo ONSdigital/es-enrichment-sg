@@ -12,7 +12,7 @@ class EnvironSchema(Schema):
     bucket_name = fields.Str(required=True)
 
 
-def domerge(input_data, join_data, columns_to_keep, join_column, bucket_name):
+def do_merge(input_data, join_data, columns_to_keep, join_column, bucket_name):
     """
     Generic merging function.
 
@@ -203,7 +203,7 @@ def data_enrichment(data_df,
         file_name = lookups[lookup]['file_name']
         columns_to_keep = lookups[lookup]['columns_to_keep']
         join_column = lookups[lookup]['join_column']
-        data_df = domerge(data_df, file_name, columns_to_keep, join_column, bucket_name)
+        data_df = do_merge(data_df, file_name, columns_to_keep, join_column, bucket_name)
 
     anomalies = pd.DataFrame()
 
