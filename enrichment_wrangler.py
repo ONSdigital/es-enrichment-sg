@@ -51,7 +51,6 @@ def lambda_handler(event, context):
         # env vars
         checkpoint = int(config["checkpoint"])
         bucket_name = config["bucket_name"]
-        identifier_column = config["identifier_column"]
         in_file_name = config["in_file_name"]
         incoming_message_group = config["incoming_message_group"]
         method_name = config["method_name"]

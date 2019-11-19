@@ -200,9 +200,9 @@ def data_enrichment(data_df,
     required_columns = []
     for lookup in lookups:
         required_columns.append(lookups[lookup]['required'])
-        file_name = lookups[lookup]['filename']
-        columns_to_keep = lookups[lookup]['columnstokeep']
-        join_column = lookups[lookup]['joincolumn']
+        file_name = lookups[lookup]['file_name']
+        columns_to_keep = lookups[lookup]['columns_to_keep']
+        join_column = lookups[lookup]['join_column']
         data_df = domerge(data_df, file_name, columns_to_keep, join_column, bucket_name)
 
     anomalies = pd.DataFrame()

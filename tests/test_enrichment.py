@@ -372,15 +372,15 @@ class TestEnrichment(unittest.TestCase):
                 "period",
                 "mike",
                 {
-                 "0": {"filename": "responderlookup",
-                       "columnstokeep": ["responder_id", "county"],
-                       "joincolumn": "responder_id",
+                 "0": {"file_name": "responderlookup",
+                       "columns_to_keep": ["responder_id", "county"],
+                       "join_column": "responder_id",
                        "required": ["county"]},
-                 "1": {"filename": "countylookup",
-                       "columnstokeep": ["county_name",
+                 "1": {"file_name": "countylookup",
+                       "columns_to_keep": ["county_name",
                                          "region", "county",
                                          "marine"],
-                       "joincolumn": "county",
+                       "join_column": "county",
                        "required": ["region", "marine"]}},
                  "responder_id"
             )
@@ -422,19 +422,18 @@ class TestEnrichment(unittest.TestCase):
                           "identifier_column": "responder_id"}
 
             input = {"data": testdata, "lookups": {
-                "0": {"filename": "responderlookup",
-                      "columnstokeep": ["responder_id", "county"],
-                      "joincolumn": "responder_id",
+                "0": {"file_name": "responderlookup",
+                      "columns_to_keep": ["responder_id", "county"],
+                      "join_column": "responder_id",
                       "required": ["county"]},
-                "1": {"filename": "countylookup",
-                      "columnstokeep": ["county_name",
-                                        "region", "county",
-                                        "marine"],
-                      "joincolumn": "county",
+                "1": {"file_name": "countylookup",
+                      "columns_to_keep": ["county_name",
+                                          "region", "county",
+                                          "marine"],
+                      "join_column": "county",
                       "required": ["region", "marine"]}},
                      "parameters": parameters}
             test_output = lambda_method_function.lambda_handler(input, context_object)
-            print(test_output)
             test_output = pd.read_json(test_output["data"])
             assert "county" in test_output.columns.values
             assert "county_name" in test_output.columns.values
@@ -496,9 +495,9 @@ class TestEnrichment(unittest.TestCase):
                           "identifier_column": "responder_id"}
             input = {"data": testdata, "lookups":
                      {"0": {"required": "yup",
-                      "filename": "mike",
-                            "columnstokeep": "moo",
-                            "joincolumn": "fred"}}, "parameters": parameters}
+                      "file_name": "mike",
+                            "columns_to_keep": "moo",
+                            "join_column": "fred"}}, "parameters": parameters}
             response = lambda_method_function.lambda_handler(
                 input, context_object
             )
