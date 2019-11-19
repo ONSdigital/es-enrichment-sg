@@ -2,25 +2,35 @@ import json
 import logging
 import os
 
-import boto3
 import pandas as pd
 from botocore.exceptions import ClientError
+from esawsfunctions import funk
 from marshmallow import Schema, fields
 
 
 class EnvironSchema(Schema):
     bucket_name = fields.Str(required=True)
-    responder_lookup_file = fields.Str(required=True)
-    county_lookup_file = fields.Str(required=True)
-    identifier_column = fields.Str(required=True)
-    county_lookup_column_1 = fields.Str(required=True)
-    county_lookup_column_2 = fields.Str(required=True)
-    county_lookup_column_3 = fields.Str(required=True)
-    county_lookup_column_4 = fields.Str(required=True)
-    period_column = fields.Str(required=True)
-    marine_mismatch_check = fields.Str(required=True)
-    missing_county_check = fields.Str(required=True)
-    missing_region_check = fields.Str(required=True)
+
+
+def domerge(input_data, join_data, columns_to_keep, join_column, bucket_name):
+    """
+    Generic merging function.
+
+    :param input_data: Input data from previous step - Dataframe
+    :param join_data: key of lookup file to pick up from s3 - String
+    :param columns_to_keep: List of columns from lookup to pick up - List(String)
+    :param join_column: Column to join lookup on with - String
+    :param bucket_name: Name of bucket to get file - String
+    :return outdata: Dataframe with lookup merged on.
+    """
+    # read and df the joindata
+    join_dataframe = funk.read_dataframe_from_s3(bucket_name, join_data)
+
+    #  merge joindata onto main dataset using defined join column
+    outdata = pd.merge(input_data,
+                       join_dataframe[columns_to_keep],
+                       on=join_column, how="left")
+    return outdata
 
 
 def lambda_handler(event, context):
@@ -48,55 +58,30 @@ def lambda_handler(event, context):
         logger.info("Validated params.")
 
         bucket_name = config["bucket_name"]
-        responder_lookup_file = config["responder_lookup_file"]
-        county_lookup_file = config["county_lookup_file"]
-        identifier_column = config["identifier_column"]
-        county_lookup_column_1 = config["county_lookup_column_1"]
-        county_lookup_column_2 = config["county_lookup_column_2"]
-        county_lookup_column_3 = config["county_lookup_column_3"]
-        county_lookup_column_4 = config["county_lookup_column_4"]
-        period_column = config["period_column"]
-        marine_mismatch_check = config["marine_mismatch_check"]
-        missing_county_check = config["missing_county_check"]
-        missing_region_check = config["missing_region_check"]
 
-        logger.info("Retrieved configuration variables.")
+        logger.info("Retrieved configuration variable.")
 
-        # Set up clients
-        s3 = boto3.resource("s3", region_name="eu-west-2")
+        # Retrieve data and behaviour information
+        data = event['data']
+        lookups = event['lookups']
+        parameters = event['parameters']
+        logger.info("Retrieved data and behaviour from wrangler.")
 
-        # Reads in responder lookup file
-        responder_object = s3.Object(bucket_name, responder_lookup_file)
-        responder_content = responder_object.get()["Body"].read()
+        identifier_column = parameters["identifier_column"]
+        period_column = parameters["period_column"]
+        marine_mismatch_check = parameters["marine_mismatch_check"]
+        logger.info("Retrieved parameters from event.")
 
-        logger.info("Retrieved responder lookup file from S3.")
-
-        # Reads in county lookup file
-        county_object = s3.Object(bucket_name, county_lookup_file)
-        county_content = county_object.get()["Body"].read()
-
-        logger.info("Retrieved county lookup file from S3.")
-
-        input_data = pd.read_json(event)
-        responder_lookup = pd.read_json(responder_content)
-        county_lookup = pd.read_json(county_content)
+        input_data = pd.read_json(data)
 
         logger.info("JSON converted to Pandas DF(s).")
 
-        enriched_df, anomalies = data_enrichment(
-            input_data,
-            responder_lookup,
-            county_lookup,
-            identifier_column,
-            county_lookup_column_1,
-            county_lookup_column_2,
-            county_lookup_column_3,
-            county_lookup_column_4,
-            marine_mismatch_check,
-            missing_county_check,
-            missing_region_check,
-            period_column,
-        )
+        enriched_df, anomalies = data_enrichment(input_data,
+                                                 marine_mismatch_check,
+                                                 period_column,
+                                                 bucket_name,
+                                                 lookups,
+                                                 identifier_column)
 
         logger.info("Enrichment function ran successfully.")
 
@@ -130,12 +115,12 @@ def lambda_handler(event, context):
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # general exception
     except Exception as e:
-        error_message = "General Error in " + current_module +  \
-                            " (" + str(type(e)) + ") |- " + str(e.args) + \
-                            " | Request ID: " + str(context.aws_request_id)
+        error_message = "General Error in " + current_module + \
+                        " (" + str(type(e)) + ") |- " + str(e.args) + \
+                        " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     finally:
-        if(len(error_message)) > 0:
+        if (len(error_message)) > 0:
             logger.error(log_message)
             return {"success": False, "error": error_message}
         else:
@@ -143,135 +128,101 @@ def lambda_handler(event, context):
             return final_output
 
 
-def marine_mismatch_detector(data, county_lookup_df, county_lookup_column_3,
-                             county_lookup_column_4, period_column, identifier_column):
+def marine_mismatch_detector(data, check_column, period_column, identifier_column):
     """
     Detects references that are producing marine but from a county that doesnt produce marine  # noqa: E501
     :param data: Input data after having been merged with responder_county_lookup - DataFrame
-    :param county_lookup_df: County_marine_lookup dataframe - DataFrame
-    :param county_lookup_column_3: Column from county lookup to join on (county) - String
-    :param county_lookup_column_4: Column from county lookup representing whether county produces marine or not - String
+    :param check_column: column to check against(marine) - String
     :param period_column: Column that holds the period - String
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
     :return: bad_data_with_marine: Df containing information about any reference that is producing marine when it shouldn't - DataFrame
     """
-    data_with_marine = pd.merge(data, county_lookup_df, on=county_lookup_column_3)
-    bad_data_with_marine = data_with_marine[
-        (data_with_marine["land_or_marine"] == "M")
-        & (data_with_marine[county_lookup_column_4] == "n")
-    ]
-    bad_data_with_marine["issue"] = "Reference should not produce marine data"
-    return bad_data_with_marine[
+
+    bad_data = data[
+        (data["land_or_marine"] == "M")
+        & (data[check_column] == "n")
+        ]
+    bad_data["issue"] = "Reference should not produce marine data"
+    return bad_data[
         [
             identifier_column,
             "issue",
             "land_or_marine",
-            county_lookup_column_4,
+            check_column,
             period_column,
         ]
     ]
 
 
-def missing_county_detector(data, county_lookup_column_3, identifier_column):
+def missing_column_detector(data, columns_to_check, identifier_column):
     """
-    Detects any references that didnt gain a county on the join with the county lookup # noqa: E501
-    :param data: Input data after being combined with responder_county_lookup - DataFrame
-    :param county_lookup_column_3: Column from county lookup to join on (county) - String
+    Detects any references that has null values for specified columns # noqa: E501
+    :param data: Input data after being combined with lookup(s) - DataFrame
+    :param columns_to_check: List of columns to check for - list(String)
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
-    :return: data_without_county: DF containing information about any reference without a county. - DataFrame
+    :return: data_without_columns: DF containing information about any reference without the column. - DataFrame
     """
-    data_without_county = data[data[county_lookup_column_3].isnull()]
-    data_without_county["issue"] = "County missing in lookup"
+    # Create empty dataframe to hold ourput
+    data_without_columns = pd.DataFrame()
 
-    return data_without_county[[identifier_column, "issue"]]
+    # For each of the passed in columns to check(1 or more)
+    # Create dataframe holding rows where column was null
+    for column_to_check in columns_to_check:
+        data_without_column = data[data[column_to_check].isnull()]
+        data_without_column["issue"] = str(column_to_check) + " missing in lookup"
+        data_without_columns = pd.concat([data_without_columns, data_without_column])
 
-
-def missing_region_detector(data, county_lookup_column_2, identifier_column):
-    """
-    Detects any references that do not have a region after merge with county marine lookup # noqa: E501
-    :param data: Input data after being combined with responder_county_lookup and county_marine_lookup - DataFrame
-    :param county_lookup_column_2: Column from county lookup that contains region(region) - String
-    :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
-    :return: data_without_region: DF containing information about any reference without a region. - DataFrame
-    """
-    data_without_region = data[data[county_lookup_column_2].isnull()]
-    data_without_region["issue"] = "Region missing in lookup"
-
-    return data_without_region[[identifier_column, "issue"]]
+    return data_without_columns[[identifier_column, "issue"]]
 
 
-def data_enrichment(data_df, responder_lookup_df, county_lookup_df, identifier_column,
-                    county_lookup_column_1, county_lookup_column_2,
-                    county_lookup_column_3, county_lookup_column_4, marine_mismatch_check,
-                    missing_county_check, missing_region_check, period_column):
+def data_enrichment(data_df,
+                    marine_mismatch_check,
+                    period_column,
+                    bucket_name,
+                    lookups,
+                    identifier_column):
     """
     Does the enrichment process by merging together several datasets. Checks for marine
     mismatch, unallocated county, and unallocated region are performed at this point.
     :param data_df: DataFrame of data to be enriched - dataframe
-    :param responder_lookup_df: Responder lookup DataFrame (map responder code -> county code) - dataframe  # noqa: E501
-    :param county_lookup_df: County lookup DataFrame (map county code -> county name) - dataframe
-    :param identifier_column: Column representing unique id (reponder_id)
-    :param county_lookup_column_1: Column from county lookup file (reference) - String
-    :param county_lookup_column_2: Column from county lookup file (region) - String
-    :param county_lookup_column_3: Column from county lookup file (county) - String
-    :param county_lookup_column_4: Column from county lookup file (marine) - String
     :param marine_mismatch_check: True/False - Should check be done  - String
-    :param missing_county_check: True/False - Should check be done  - String
-    :param missing_region_check: True/False - Should check be done  - String
     :param period_column: Column that holds period. (period) - String
-    :return: (Enriched_data - DataFrame:DataFrame of enriched data, Anomalies - DataFrame: DF containing info about data anomalies detected in the process.)
+    :param bucket_name: Name of the s3 bucket - String
+    :param lookups: Information about lookups required. - String(json)
+    :param identifier_column: Column representing unique id (responder_id)
+
+
+    :return: Enriched_data - DataFrame:DataFrame of enriched data.
+    :return: Anomalies - DataFrame: DF containing info
+                         about data anomalies detected in the process.
     """
 
-    # Renaming columns to match what is expected
-    responder_lookup_df.rename(
-        columns={
-            "ref": identifier_column,
-            county_lookup_column_3: county_lookup_column_3,
-        },
-        inplace=True,
-    )
-    county_lookup_df.rename(columns={"cty_code": county_lookup_column_3}, inplace=True)
-
-    enriched_data = pd.merge(
-        data_df, responder_lookup_df, on=identifier_column, how="left"
-    )
+    required_columns = []
+    for lookup in lookups:
+        required_columns.append(lookups[lookup]['required'])
+        file_name = lookups[lookup]['filename']
+        columns_to_keep = lookups[lookup]['columnstokeep']
+        join_column = lookups[lookup]['joincolumn']
+        data_df = domerge(data_df, file_name, columns_to_keep, join_column, bucket_name)
 
     anomalies = pd.DataFrame()
-    # Do Missing County Check here
-    if missing_county_check == "true":
-        anomalies = missing_county_detector(
-            enriched_data, county_lookup_column_3, identifier_column
-        )
+
+    # missing column detection
+    for column in required_columns:
+        anomalies = pd.concat([anomalies,
+                               missing_column_detector(data_df,
+                                                       column,
+                                                       identifier_column)])
 
     # Do Marine mismatch check here
     if marine_mismatch_check == "true":
-
         marine_anomalies = marine_mismatch_detector(
-            enriched_data,
-            county_lookup_df,
-            county_lookup_column_3,
-            county_lookup_column_4,
+            data_df,
+            "marine",
             period_column,
             identifier_column,
         )
 
         anomalies = pd.concat([marine_anomalies, anomalies])
 
-    enriched_data = pd.merge(
-        enriched_data,
-        county_lookup_df[
-            [county_lookup_column_1, county_lookup_column_2, county_lookup_column_3]
-        ],
-        on=county_lookup_column_3,
-        how="left",
-    )
-
-    if missing_region_check == "true":
-
-        region_anomalies = missing_region_detector(
-            enriched_data, county_lookup_column_2, identifier_column
-        )
-
-        anomalies = pd.concat([region_anomalies, anomalies])
-
-    return enriched_data, anomalies
+    return data_df, anomalies

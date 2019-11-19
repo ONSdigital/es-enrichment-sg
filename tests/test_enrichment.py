@@ -37,7 +37,10 @@ class TestEnrichment(unittest.TestCase):
                 "method_name": "enrichment_method",
                 "sqs_queue_url": sqs_queue_url,
                 "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test"
+                "incoming_message_group": "test",
+                "period_column": "period",
+                "lookup_info": "Look up!!",
+                "marine_mismatch_check": "true"
             },
         ):
             # using get_from_s3 to force exception early on.
@@ -68,7 +71,10 @@ class TestEnrichment(unittest.TestCase):
                 "method_name": "enrichment_method",
                 "sqs_queue_url": sqs_queue_url,
                 "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test"
+                "incoming_message_group": "test",
+                "period_column": "period",
+                "lookup_info": "Look up!!",
+                "marine_mismatch_check": "true"
             },
         ):
             # using get_from_s3 to force exception early on.
@@ -99,7 +105,10 @@ class TestEnrichment(unittest.TestCase):
                 "method_name": "enrichment_method",
                 "sqs_queue_url": sqs_queue_url,
                 "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test"
+                "incoming_message_group": "test",
+                "period_column": "period",
+                "lookup_info": "Look up!!",
+                "marine_mismatch_check": "true"
             },
         ):
             # using get_from_s3 to force exception early on.
@@ -129,7 +138,7 @@ class TestEnrichment(unittest.TestCase):
 
         with open("tests/fixtures/test_data.json", "r") as file:
             testdata = file.read()
-        testdata = pd.DataFrame(json.loads(testdata))
+        testdata = json.loads(testdata)
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
@@ -142,7 +151,10 @@ class TestEnrichment(unittest.TestCase):
                 "method_name": "enrichment_method",
                 "sqs_queue_url": sqs_queue_url,
                 "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test"
+                "incoming_message_group": "test",
+                "period_column": "period",
+                "lookup_info": "Look up!!",
+                "marine_mismatch_check": "true"
             },
         ):
             from botocore.response import StreamingBody
@@ -185,7 +197,7 @@ class TestEnrichment(unittest.TestCase):
 
         with open("tests/fixtures/test_data.json", "r") as file:
             testdata = file.read()
-        testdata = pd.DataFrame(json.loads(testdata))
+        testdata = json.loads(testdata)
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
@@ -198,7 +210,10 @@ class TestEnrichment(unittest.TestCase):
                 "method_name": "enrichment_method",
                 "sqs_queue_url": sqs_queue_url,
                 "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test"
+                "incoming_message_group": "test",
+                "period_column": "period",
+                "lookup_info": "Look up!!",
+                "marine_mismatch_check": "true"
             },
         ):
             from botocore.response import StreamingBody
@@ -237,7 +252,10 @@ class TestEnrichment(unittest.TestCase):
                 "method_name": "enrichment_method",
                 "sqs_queue_url": "aasdasdasd",
                 "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test"
+                "incoming_message_group": "test",
+                "period_column": "period",
+                "lookup_info": "Look up!!",
+                "marine_mismatch_check": "true"
             },
         ):
             response = lambda_wrangler_function.lambda_handler(
@@ -253,21 +271,7 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "bucket_name": "mike",
-                "county_lookup_column_1": "county_name",
-                "county_lookup_column_2": "region",
-                "county_lookup_column_3": "county",
-                "county_lookup_column_4": "marine",
-                "county_lookup_file": "mike.mike",
-                "error_handler_arn": "Arrgh",
-                "identifier_column": "responder_id",
-                "location_lookup_file": "mike.mike",
-                "marine_mismatch_check": "true",
-                "missing_county_check": "true",
-                "missing_region_check": "true",
-                "period_column": "period",
-                "responder_lookup_file": "mike.mike",
-                "incoming_message_group": "test"
+                "bucket_name": "mike"
             },
         ):
             # using get_from_s3 to force exception early on.
@@ -285,20 +289,7 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
-                "bucket_name": "mike",
-                "county_lookup_column_1": "county_name",
-                "county_lookup_column_2": "region",
-                "county_lookup_column_3": "county",
-                "county_lookup_column_4": "marine",
-                "county_lookup_file": "mike.mike",
-                "error_handler_arn": "Arrgh",
-                "identifier_column": "responder_id",
-                "location_lookup_file": "mike.mike",
-                "marine_mismatch_check": "true",
-                "missing_county_check": "true",
-                "missing_region_check": "true",
-                "period_column": "period",
-                "responder_lookup_file": "mike.mike",
+                "bucket_name": "mike"
             },
         ):
             # using get_from_s3 to force exception early on.
@@ -310,21 +301,12 @@ class TestEnrichment(unittest.TestCase):
                 assert "success" in response
                 assert response["success"] is False
 
-    def test_missing_county_detector(self):
+    def test_missing_column_detector(self):
         data = pd.DataFrame(
             {"county": [1, None, 2], "responder_id": [666, 123, 8008]}
         )
-        test_output = lambda_method_function.missing_county_detector(
-            data, "county", "responder_id"
-        )
-        assert test_output.shape[0] == 1
-
-    def test_missing_region_detector(self):
-        data = pd.DataFrame(
-            {"region": [1, None, 2], "responder_id": [666, 123, 8008]}
-        )
-        test_output = lambda_method_function.missing_region_detector(
-            data, "region", "responder_id"
+        test_output = lambda_method_function.missing_column_detector(
+            data, ["county"], "responder_id"
         )
         assert test_output.shape[0] == 1
 
@@ -342,61 +324,65 @@ class TestEnrichment(unittest.TestCase):
         testdata_df = pd.merge(
             testdata_df, responder_lookup_df, on="responder_id", how="left"
         )
-
+        testdata_df = pd.merge(
+            testdata_df, countylookupdata_df, on="county", how="left"
+        )
         test_output = lambda_method_function.marine_mismatch_detector(
             testdata_df,
-            countylookupdata_df,
-            "county",
             "marine",
             "period",
-            "responder_id",
+            "responder_id"
         )
         assert test_output.shape[0] == 1
 
+    @mock_s3
     def test_data_enricher(self):
         with mock.patch.dict(
             lambda_method_function.os.environ,
             {
-                "bucket_name": "mike",
-                "county_lookup_column_1": "county_name",
-                "county_lookup_column_2": "region",
-                "county_lookup_column_3": "county",
-                "county_lookup_column_4": "marine",
-                "county_lookup_file": "mike.mike",
-                "error_handler_arn": "Arrgh",
-                "identifier_column": "responder_id",
-                "location_lookup_file": "mike.mike",
-                "marine_mismatch_check": "true",
-                "missing_county_check": "true",
-                "missing_region_check": "true",
-                "period_column": "period",
-                "responder_lookup_file": "mike.mike",
+                "bucket_name": "mike"
             },
         ):
             with open("tests/fixtures/test_data.json", "r") as file:
                 testdata = file.read()
-            with open("tests/fixtures/county_marine_lookup.json", "r") as file:
-                countylookupdata = file.read()
-            with open(
-                "tests/fixtures/responder_county_lookup.json", "r"
-            ) as file:
-                responder_lookup = file.read()
+
             testdata_df = pd.DataFrame(json.loads(testdata))
-            countylookupdata_df = pd.DataFrame(json.loads(countylookupdata))
-            responder_lookup_df = pd.DataFrame(json.loads(responder_lookup))
+            client = boto3.client(
+                "s3",
+                region_name="eu-west-1",
+                aws_access_key_id="fake_access_key",
+                aws_secret_access_key="fake_secret_key",
+            )
+
+            client.create_bucket(Bucket="mike")
+            client.upload_file(
+                Filename="tests/fixtures/responder_county_lookup.json",
+                Bucket="mike",
+                Key="responderlookup",
+            )
+            client.upload_file(
+                Filename="tests/fixtures/county_marine_lookup.json",
+                Bucket="mike",
+                Key="countylookup",
+            )
+
             test_output, test_anomalies = lambda_method_function.data_enrichment(
                 testdata_df,
-                responder_lookup_df,
-                countylookupdata_df,
-                "responder_id",
-                "county_name",
-                "region",
-                "county",
-                "marine",
-                "true",
-                "true",
                 "true",
                 "period",
+                "mike",
+                {
+                 "0": {"filename": "responderlookup",
+                       "columnstokeep": ["responder_id", "county"],
+                       "joincolumn": "responder_id",
+                       "required": ["county"]},
+                 "1": {"filename": "countylookup",
+                       "columnstokeep": ["county_name",
+                                         "region", "county",
+                                         "marine"],
+                       "joincolumn": "county",
+                       "required": ["region", "marine"]}},
+                 "responder_id"
             )
 
             assert "county" in test_output.columns.values
@@ -408,19 +394,7 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_method_function.os.environ,
             {
-                "bucket_name": "MIKE",
-                "county_lookup_column_1": "county_name",
-                "county_lookup_column_2": "region",
-                "county_lookup_column_3": "county",
-                "county_lookup_column_4": "marine",
-                "county_lookup_file": "countylookup",
-                "error_handler_arn": "Arrgh",
-                "identifier_column": "responder_id",
-                "marine_mismatch_check": "What",
-                "missing_county_check": "eh",
-                "missing_region_check": "oh",
-                "period_column": "period",
-                "responder_lookup_file": "responderlookup",
+                "bucket_name": "MIKE"
             },
         ):
             client = boto3.client(
@@ -444,8 +418,23 @@ class TestEnrichment(unittest.TestCase):
 
             with open("tests/fixtures/test_data.json", "r") as file:
                 testdata = file.read()
+            parameters = {"marine_mismatch_check": "true", "period_column": "period",
+                          "identifier_column": "responder_id"}
 
-            test_output = lambda_method_function.lambda_handler(testdata, "")
+            input = {"data": testdata, "lookups": {
+                "0": {"filename": "responderlookup",
+                      "columnstokeep": ["responder_id", "county"],
+                      "joincolumn": "responder_id",
+                      "required": ["county"]},
+                "1": {"filename": "countylookup",
+                      "columnstokeep": ["county_name",
+                                        "region", "county",
+                                        "marine"],
+                      "joincolumn": "county",
+                      "required": ["region", "marine"]}},
+                     "parameters": parameters}
+            test_output = lambda_method_function.lambda_handler(input, context_object)
+            print(test_output)
             test_output = pd.read_json(test_output["data"])
             assert "county" in test_output.columns.values
             assert "county_name" in test_output.columns.values
@@ -498,23 +487,35 @@ class TestEnrichment(unittest.TestCase):
         with mock.patch.dict(
             lambda_method_function.os.environ,
             {
-                "bucket_name": "MIKE",
-                "county_lookup_column_1": "county_name",
-                "county_lookup_column_2": "region",
-                "county_lookup_column_3": "county",
-                "county_lookup_column_4": "marine",
-                "county_lookup_file": "countylookup",
-                "error_handler_arn": "Arrgh",
-                "identifier_column": "responder_id",
-                "marine_mismatch_check": "What",
-                "missing_county_check": "eh",
-                "missing_region_check": "oh",
-                "period_column": "period",
-                "responder_lookup_file": "bad-lookup-file",
+                "bucket_name": "MIKE"
             },
         ):
+            with open("tests/fixtures/test_data.json", "r") as file:
+                testdata = file.read()
+            parameters = {"marine_mismatch_check": "true", "period_column": "period",
+                          "identifier_column": "responder_id"}
+            input = {"data": testdata, "lookups":
+                     {"0": {"required": "yup",
+                      "filename": "mike",
+                            "columnstokeep": "moo",
+                            "joincolumn": "fred"}}, "parameters": parameters}
             response = lambda_method_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, context_object
+                input, context_object
             )
 
             assert response["error"].__contains__("""AWS Error""")
+
+    def test_method_general_error(self):
+        with mock.patch.dict(
+            lambda_method_function.os.environ,
+            {
+                "bucket_name": "MIKE"
+            },
+        ):
+            with mock.patch("enrichment_method.EnvironSchema") as mock_schema:
+                mock_schema.side_effect = Exception("uh oh")
+                response = lambda_method_function.lambda_handler(
+                    None, context_object
+                )
+
+                assert "General Error" in response["error"]
