@@ -19,6 +19,9 @@ class EnvironSchema(Schema):
     sqs_queue_url = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
     sqs_message_group_id = fields.Str(required=True)
+    marine_mismatch_check = fields.Str(required=True)
+    period_column = fields.Str(required=True)
+    lookup_info = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -28,6 +31,7 @@ def lambda_handler(event, context):
     :param context:
     :return Json: success and checkpoint information, and/or indication of error message.
     """
+
     # set up logger
     current_module = "Enrichment - Wrangler"
     error_message = ''
@@ -47,7 +51,6 @@ def lambda_handler(event, context):
         # env vars
         checkpoint = int(config["checkpoint"])
         bucket_name = config["bucket_name"]
-        identifier_column = config["identifier_column"]
         in_file_name = config["in_file_name"]
         incoming_message_group = config["incoming_message_group"]
         method_name = config["method_name"]
@@ -64,13 +67,26 @@ def lambda_handler(event, context):
         data_df, receipt_handler = funk.get_dataframe(sqs_queue_url, bucket_name,
                                                       in_file_name,
                                                       incoming_message_group)
+        # parameters
+        marine_mismatch_check = config['marine_mismatch_check']
+        period_column = config['period_column']
+        identifier_column = config['identifier_column']
+
+        # lookup info
+        lookup_info = config['lookup_info']
+
+        # create parameter json from environment variables
+        parameters = {"marine_mismatch_check": marine_mismatch_check,
+                      "period_column": period_column,
+                      "identifier_column": identifier_column}
 
         logger.info("Retrieved data from s3")
-        wrangled_data = wrangle_data(data_df, identifier_column)
-        logger.info("Data Wrangled")
 
         response = lambda_client.invoke(
-            FunctionName=method_name, Payload=json.dumps(wrangled_data)
+            FunctionName=method_name,
+            Payload="{\"data\":" + json.dumps(data_df)
+                    + ", \"lookups\": " + lookup_info
+                    + ", \"parameters\": " + json.dumps(parameters) + "}"
         )
 
         logger.info("Method Called")
@@ -118,29 +134,16 @@ def lambda_handler(event, context):
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # general exception
     except Exception as e:
-        error_message = "General Error in " + current_module +  \
-                            " (" + str(type(e)) + ") |- " + str(e.args) + \
-                            " | Request ID: " + str(context.aws_request_id)
+
+        error_message = "General Error in " + current_module + \
+                        " (" + str(type(e)) + ") |- " + str(e.args) + \
+                        " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     finally:
-        if(len(error_message)) > 0:
+
+        if (len(error_message)) > 0:
             logger.error(log_message)
             return {"success": False, "error": error_message}
         else:
             logger.info("Successfully completed module: " + current_module)
             return {"success": True, "checkpoint": checkpoint}
-
-
-def wrangle_data(data_df, identifier_column):
-    """
-    Prepares data for the enrichment step. May not be necessary going forward. # noqa: E501
-    Renames a column and returns df as json
-    :param data_df: Main input data to process - DataFrame
-    :param identifier_column: The name of the column representing unique id
-                    (usually responder_id) - String
-    :return data_json: Json String representation of the input dataframe. - String
-    """
-    data_df.rename(columns={"idbr": identifier_column}, inplace=True)
-    data_json = data_df.to_json(orient="records")
-
-    return data_json
