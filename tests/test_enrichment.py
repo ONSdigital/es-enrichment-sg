@@ -138,7 +138,7 @@ class TestEnrichment(unittest.TestCase):
 
         with open("tests/fixtures/test_data.json", "r") as file:
             testdata = file.read()
-        testdata = json.loads(testdata)
+        testdata = pd.DataFrame(json.loads(testdata))
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
@@ -197,7 +197,7 @@ class TestEnrichment(unittest.TestCase):
 
         with open("tests/fixtures/test_data.json", "r") as file:
             testdata = file.read()
-        testdata = json.loads(testdata)
+        testdata = pd.DataFrame(json.loads(testdata))
         with mock.patch.dict(
             lambda_wrangler_function.os.environ,
             {
