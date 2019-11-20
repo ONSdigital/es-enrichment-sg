@@ -43,7 +43,7 @@ functions:
       checkpoint: 3
       bucket_name: results-s3-bucket
       identifier_column: responder_id
-      in_file_name: ingest_out.json
+      in_file_name: test_data_mike_1.json
       incoming_message_group: ingest-takeon-data-out
       method_name: es-enrichment-method
       out_file_name: enrichment_out.json
@@ -65,6 +65,7 @@ functions:
     layers:
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:10
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_marshmallow:2
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-commonfunctions:12
     tags:
       app: results
     environment:
