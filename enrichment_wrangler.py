@@ -81,10 +81,10 @@ def lambda_handler(event, context):
                       "identifier_column": identifier_column}
 
         logger.info("Retrieved data from s3")
-
+        data_json = data_df.to_json(orient="records")
         response = lambda_client.invoke(
             FunctionName=method_name,
-            Payload="{\"data\":" + json.dumps(data_df)
+            Payload="{\"data\":" + json.dumps(data_json)
                     + ", \"lookups\": " + lookup_info
                     + ", \"parameters\": " + json.dumps(parameters) + "}"
         )
