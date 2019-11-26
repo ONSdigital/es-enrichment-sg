@@ -88,8 +88,8 @@ def lambda_handler(event, context):
                     + ", \"lookups\": " + lookup_info
                     + ", \"parameters\": " + json.dumps(parameters) + "}"
         )
-        if str(type(json_response)) != "<class 'str'>":
-            raise funk.MethodFailure(json_response['error'])
+        if str(type(response)) != "<class 'str'>":
+            raise funk.MethodFailure(response['error'])
 
         logger.info("Method Called")
         json_response = json.loads(response.get("Payload").read().decode("utf-8"))
