@@ -92,8 +92,8 @@ def lambda_handler(event, context):
         logger.info("Method Called")
         json_response = json.loads(response.get("Payload").read().decode("utf-8"))
         logger.info("Json extracted from method response.")
-        
-        if str(type(json_response)) != "<class 'str'>":
+
+        if 'error' in json_response.keys():
             raise funk.MethodFailure(json_response['error'])
 
         anomalies = json_response["anomalies"]
@@ -110,7 +110,7 @@ def lambda_handler(event, context):
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handler)
         logger.info("Successfully sent message to sns.")
         checkpoint += 1
-    
+
     # Raise the Method Failing.
     except funk.MethodFailure as e:
         error_message = e.error_message
