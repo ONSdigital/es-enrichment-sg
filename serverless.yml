@@ -40,7 +40,7 @@ functions:
     tags:
       app: results
     environment:
-      checkpoint: 3
+      checkpoint: 1
       bucket_name: results-s3-bucket
       identifier_column: responder_id
       in_file_name: test_data_mike_1.json
