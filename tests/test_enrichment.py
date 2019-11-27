@@ -175,7 +175,7 @@ class TestEnrichment(unittest.TestCase):
                             {"RuntimeVariables": {"checkpoint": 666}},
                             context_object
                         )
-                        print(response)
+
                         assert "success" in response
                         assert response["success"] is True
 
@@ -518,3 +518,61 @@ class TestEnrichment(unittest.TestCase):
                 )
 
                 assert "General Error" in response["error"]
+
+    @mock_sqs
+    @mock_s3
+    @mock_lambda
+    def test_method_error(self):
+        sqs = boto3.resource("sqs", region_name="eu-west-2")
+        sqs.create_queue(QueueName="test_queue")
+        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
+        client = boto3.client(
+                 "s3",
+                 region_name="eu-west-1",
+                 aws_access_key_id="fake_access_key",
+                 aws_secret_access_key="fake_secret_key",
+             )
+
+        client.create_bucket(Bucket="mike")
+
+        with open("tests/fixtures/test_data.json", "r") as file:
+            testdata = file.read()
+        testdata = pd.DataFrame(json.loads(testdata))
+        with mock.patch.dict(
+            lambda_wrangler_function.os.environ,
+            {
+                "sns_topic_arn": "mike",
+                "bucket_name": "mike",
+                "checkpoint": "3",
+                "identifier_column": "responder_id",
+                "in_file_name": "test_data.json",
+                "out_file_name": "PhilipeDePhile",
+                "method_name": "enrichment_method",
+                "sqs_queue_url": sqs_queue_url,
+                "sqs_message_group_id": "testytest Mctestytestytesttest",
+                "incoming_message_group": "test",
+                "period_column": "period",
+                "lookup_info": "Look up!!",
+                "marine_mismatch_check": "true"
+            },
+        ):
+            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mock_s3:
+                mock_s3.return_value = testdata, 666
+                with mock.patch(
+                    "enrichment_wrangler.boto3.client"
+                ) as mock_client:
+                    mock_client_object = mock.Mock()
+                    mock_client.return_value = mock_client_object
+
+                    mock_client_object.invoke.return_value.get.return_value \
+                        .read.return_value.decode.return_value = \
+                        '{"error": "This is an error message"}'
+                    response = lambda_wrangler_function.lambda_handler(
+                        {"RuntimeVariables": {"checkpoint": 666}},
+                        context_object
+                    )
+
+                    assert "success" in response
+                    assert response["success"] is False
+                    assert response["error"].__contains__(
+                        """This is an error message""")
