@@ -32,7 +32,7 @@ def lambda_handler(event, context):
     :return Json: success and checkpoint information, and/or indication of error message.
     """
 
-    # set up logger
+    # Set up logger.
     current_module = "Enrichment - Wrangler"
     error_message = ''
     log_message = ''
@@ -48,7 +48,7 @@ def lambda_handler(event, context):
 
         logger.info("Validated params.")
 
-        # env vars
+        # Env vars.
         checkpoint = int(config["checkpoint"])
         bucket_name = config["bucket_name"]
         in_file_name = config["in_file_name"]
@@ -61,21 +61,21 @@ def lambda_handler(event, context):
 
         logger.info("Retrieved configuration variables")
 
-        # set up client
+        # Set up client.
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
         sqs = boto3.client("sqs", region_name='eu-west-2')
         data_df, receipt_handler = funk.get_dataframe(sqs_queue_url, bucket_name,
                                                       in_file_name,
                                                       incoming_message_group)
-        # parameters
+        # Parameters.
         marine_mismatch_check = config['marine_mismatch_check']
         period_column = config['period_column']
         identifier_column = config['identifier_column']
 
-        # lookup info
+        # Lookup info.
         lookup_info = config['lookup_info']
 
-        # create parameter json from environment variables
+        # Create parameter json from environment variables.
         parameters = {"marine_mismatch_check": marine_mismatch_check,
                       "period_column": period_column,
                       "identifier_column": identifier_column}
@@ -93,6 +93,9 @@ def lambda_handler(event, context):
         json_response = json.loads(response.get("Payload").read().decode("utf-8"))
         logger.info("Json extracted from method response.")
 
+        if 'error' in json_response.keys():
+            raise funk.MethodFailure(json_response['error'])
+
         anomalies = json_response["anomalies"]
         final_output = str(json_response["data"])
 
@@ -107,40 +110,43 @@ def lambda_handler(event, context):
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handler)
         logger.info("Successfully sent message to sns.")
         checkpoint += 1
-    # raise value validation error
+
+    # Raise value validation error.
     except ValueError as e:
         error_message = "Parameter validation error in " + current_module \
                         + " |- " + str(e.args) + " | Request ID: " \
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # raise client based error
+    # Raise client based error.
     except ClientError as e:
         error_message = "AWS Error (" + str(e.response['Error']['Code']) \
                         + ") " + current_module + " |- " + str(e.args) \
                         + " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # raise key/index error
+    # Raise key/index error.
     except KeyError as e:
         error_message = "Key Error in " + current_module + " |- " + \
                         str(e.args) + " | Request ID: " \
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # raise error in lambda response
+    # Raise error in lambda response.
     except IncompleteReadError as e:
         error_message = "Incomplete Lambda response encountered in " \
                         + current_module + " |- " + \
                         str(e.args) + " | Request ID: " \
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # general exception
+    # Raise the Method Failing.
+    except funk.MethodFailure as e:
+        error_message = e.error_message
+        log_message = "Error in " + method_name + "."
+    # Raise a general exception.
     except Exception as e:
-
         error_message = "General Error in " + current_module + \
                         " (" + str(type(e)) + ") |- " + str(e.args) + \
                         " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     finally:
-
         if (len(error_message)) > 0:
             logger.error(log_message)
             return {"success": False, "error": error_message}
