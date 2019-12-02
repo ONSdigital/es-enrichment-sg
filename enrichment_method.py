@@ -162,7 +162,7 @@ def missing_column_detector(data, columns_to_check, identifier_column):
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
     :return: data_without_columns: DF containing information about any reference without the column. - DataFrame
     """
-    # Create empty dataframe to hold ourput
+    # Create empty dataframe to hold output
     data_without_columns = pd.DataFrame()
 
     # For each of the passed in columns to check(1 or more)

@@ -36,11 +36,11 @@ functions:
     layers:
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:10
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_marshmallow:2
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-commonfunctions:12
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-commonfunctions:14
     tags:
       app: results
     environment:
-      checkpoint: 3
+      checkpoint: 1
       bucket_name: results-s3-bucket
       identifier_column: responder_id
       in_file_name: test_data_mike_1.json
@@ -65,7 +65,7 @@ functions:
     layers:
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:10
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_marshmallow:2
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-commonfunctions:12
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-commonfunctions:14
     tags:
       app: results
     environment:
