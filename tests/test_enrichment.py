@@ -170,8 +170,8 @@ class TestEnrichment(unittest.TestCase):
                         mock_client_object.invoke.return_value \
                             .get.return_value.read \
                             .return_value.decode.return_value = json.dumps({
-                            "data": file.read(), "success": True, "anomalies": []
-                        })
+                             "data": file.read(), "success": True, "anomalies": []
+                            })
                         response = lambda_wrangler_function.lambda_handler(
                             {"RuntimeVariables": {"checkpoint": 666}},
                             context_object
@@ -567,7 +567,8 @@ class TestEnrichment(unittest.TestCase):
 
                     mock_client_object.invoke.return_value.get.return_value \
                         .read.return_value.decode.return_value = \
-                        json.dumps({"error": "This is an error message", "success": False})
+                        json.dumps({"error": "This is an error message",
+                                    "success": False})
                     response = lambda_wrangler_function.lambda_handler(
                         {"RuntimeVariables": {"checkpoint": 666}},
                         context_object
