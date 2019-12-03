@@ -37,7 +37,7 @@ def lambda_handler(event, context):
     Performs enrichment process, joining 2 lookups onto data and detecting anomalies.
     :param event: event object.
     :param context: Context object.
-    :return final_output: Json string representing enriched DataFrame - Type: JSON
+    :return final_output: Dict with "success", "data" and "anomalies" or "success and "error".
     """
     # set up logger
     current_module = "Enrichment - Method"
