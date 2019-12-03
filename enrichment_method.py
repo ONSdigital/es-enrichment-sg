@@ -91,10 +91,7 @@ def lambda_handler(event, context):
 
         logger.info("DF(s) converted back to JSON.")
 
-        combined_out = {"data": json_out, "anomalies": anomaly_out}
-
-        final_output = json.loads(json.dumps(combined_out))
-
+        final_output = {"data": json_out, "anomalies": anomaly_out}
     # raise value validation error
     except ValueError as e:
         error_message = "Parameter validation error" + current_module \
@@ -123,9 +120,10 @@ def lambda_handler(event, context):
         if (len(error_message)) > 0:
             logger.error(log_message)
             return {"success": False, "error": error_message}
-        else:
-            logger.info("Successfully completed module: " + current_module)
-            return final_output
+
+    logger.info("Successfully completed module: " + current_module)
+    final_output['success'] = True
+    return final_output
 
 
 def marine_mismatch_detector(data, check_column, period_column, identifier_column):

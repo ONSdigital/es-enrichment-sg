@@ -157,7 +157,6 @@ class TestEnrichment(unittest.TestCase):
                 "marine_mismatch_check": "true"
             },
         ):
-            from botocore.response import StreamingBody
             with mock.patch("enrichment_wrangler.funk.get_dataframe") as mock_s3:
                 mock_s3.return_value = testdata, 666
                 with mock.patch(
@@ -166,11 +165,13 @@ class TestEnrichment(unittest.TestCase):
                     mock_client_object = mock.Mock()
                     mock_client.return_value = mock_client_object
                     with open(
-                        "tests/fixtures/test_data_from_method.json", "rb"
+                        "tests/fixtures/test_data_from_method.json", "r"
                     ) as file:
-                        mock_client_object.invoke.return_value = {
-                            "Payload": StreamingBody(file, 4878)
-                        }
+                        mock_client_object.invoke.return_value \
+                            .get.return_value.read \
+                            .return_value.decode.return_value = json.dumps({
+                            "data": file.read(), "success": True, "anomalies": []
+                        })
                         response = lambda_wrangler_function.lambda_handler(
                             {"RuntimeVariables": {"checkpoint": 666}},
                             context_object
@@ -390,7 +391,7 @@ class TestEnrichment(unittest.TestCase):
 
     @mock_s3
     @mock_lambda
-    def test_lambder_handler(self):
+    def test_method(self):
         with mock.patch.dict(
             lambda_method_function.os.environ,
             {
@@ -566,7 +567,7 @@ class TestEnrichment(unittest.TestCase):
 
                     mock_client_object.invoke.return_value.get.return_value \
                         .read.return_value.decode.return_value = \
-                        '{"error": "This is an error message"}'
+                        json.dumps({"error": "This is an error message", "success": False})
                     response = lambda_wrangler_function.lambda_handler(
                         {"RuntimeVariables": {"checkpoint": 666}},
                         context_object
