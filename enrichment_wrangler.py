@@ -4,7 +4,7 @@ import os
 
 import boto3
 from botocore.exceptions import ClientError, IncompleteReadError
-from esawsfunctions import funk
+from es_aws_functions import aws_functions, exception_classes
 from marshmallow import Schema, fields
 
 
@@ -64,7 +64,7 @@ def lambda_handler(event, context):
         # Set up client.
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
         sqs = boto3.client("sqs", region_name='eu-west-2')
-        data_df, receipt_handler = funk.get_dataframe(sqs_queue_url, bucket_name,
+        data_df, receipt_handler = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
                                                       in_file_name,
                                                       incoming_message_group)
         # Parameters.
@@ -94,16 +94,16 @@ def lambda_handler(event, context):
         logger.info("JSON extracted from method response.")
 
         if not json_response['success']:
-            raise funk.MethodFailure(json_response['error'])
+            raise exception_classes.MethodFailure(json_response['error'])
 
         anomalies = json_response["anomalies"]
 
-        funk.save_data(bucket_name, out_file_name, json_response["data"], sqs_queue_url,
+        aws_functions.save_data(bucket_name, out_file_name, json_response["data"], sqs_queue_url,
                        sqs_message_group_id)
 
         logger.info("Successfully sent data to s3.")
 
-        funk.send_sns_message_with_anomalies(checkpoint, anomalies,
+        aws_functions.send_sns_message_with_anomalies(checkpoint, anomalies,
                                              sns_topic_arn, "Enrichment.")
         if receipt_handler:
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handler)
@@ -136,7 +136,7 @@ def lambda_handler(event, context):
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     # Raise the Method Failing.
-    except funk.MethodFailure as e:
+    except exception_classes.MethodFailure as e:
         error_message = e.error_message
         log_message = "Error in " + method_name + "."
     # Raise a general exception.

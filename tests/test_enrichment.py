@@ -44,7 +44,7 @@ class TestEnrichment(unittest.TestCase):
             },
         ):
             # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mocked:
+            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
                     {"RuntimeVariables": {"checkpoint": 666}}, context_object
@@ -78,7 +78,7 @@ class TestEnrichment(unittest.TestCase):
             },
         ):
             # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mocked:
+            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mocked:
                 mocked.side_effect = KeyError("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
                     {"RuntimeVariables": {"checkpoint": 666}}, context_object
@@ -112,7 +112,7 @@ class TestEnrichment(unittest.TestCase):
             },
         ):
             # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mocked:
+            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
                     {"RuntimeVariables": {"checkpoint": 666}}, context_object
@@ -157,7 +157,7 @@ class TestEnrichment(unittest.TestCase):
                 "marine_mismatch_check": "true"
             },
         ):
-            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mock_s3:
+            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mock_s3:
                 mock_s3.return_value = testdata, 666
                 with mock.patch(
                     "enrichment_wrangler.boto3.client"
@@ -218,7 +218,7 @@ class TestEnrichment(unittest.TestCase):
             },
         ):
             from botocore.response import StreamingBody
-            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mock_s3:
+            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mock_s3:
                 mock_s3.return_value = testdata, 666
                 with mock.patch(
                     "enrichment_wrangler.boto3.client"
@@ -557,7 +557,7 @@ class TestEnrichment(unittest.TestCase):
                 "marine_mismatch_check": "true"
             },
         ):
-            with mock.patch("enrichment_wrangler.funk.get_dataframe") as mock_s3:
+            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mock_s3:
                 mock_s3.return_value = testdata, 666
                 with mock.patch(
                     "enrichment_wrangler.boto3.client"
