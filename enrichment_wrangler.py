@@ -65,8 +65,8 @@ def lambda_handler(event, context):
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
         sqs = boto3.client("sqs", region_name='eu-west-2')
         data_df, receipt_handler = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
-                                                      in_file_name,
-                                                      incoming_message_group)
+                                                               in_file_name,
+                                                               incoming_message_group)
         # Parameters.
         marine_mismatch_check = config['marine_mismatch_check']
         period_column = config['period_column']
@@ -98,13 +98,13 @@ def lambda_handler(event, context):
 
         anomalies = json_response["anomalies"]
 
-        aws_functions.save_data(bucket_name, out_file_name, json_response["data"], sqs_queue_url,
-                       sqs_message_group_id)
+        aws_functions.save_data(bucket_name, out_file_name, json_response["data"],
+                                sqs_queue_url, sqs_message_group_id)
 
         logger.info("Successfully sent data to s3.")
 
         aws_functions.send_sns_message_with_anomalies(checkpoint, anomalies,
-                                             sns_topic_arn, "Enrichment.")
+                                                      sns_topic_arn, "Enrichment.")
         if receipt_handler:
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handler)
         logger.info("Successfully sent message to sns.")

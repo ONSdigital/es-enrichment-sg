@@ -3,7 +3,7 @@ import os
 
 import pandas as pd
 from botocore.exceptions import ClientError
-from es_aws_functions import aws_functions, exception_classes
+from es_aws_functions import aws_functions
 from marshmallow import Schema, fields
 
 
