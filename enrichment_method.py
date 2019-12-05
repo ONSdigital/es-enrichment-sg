@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 
@@ -38,7 +37,8 @@ def lambda_handler(event, context):
     Performs enrichment process, joining 2 lookups onto data and detecting anomalies.
     :param event: event object.
     :param context: Context object.
-    :return final_output: Json string representing enriched DataFrame - Type: JSON
+    :return final_output: Dict with "success",
+            "data" and "anomalies" or "success and "error".
     """
     # set up logger
     current_module = "Enrichment - Method"
@@ -91,10 +91,7 @@ def lambda_handler(event, context):
 
         logger.info("DF(s) converted back to JSON.")
 
-        combined_out = {"data": json_out, "anomalies": anomaly_out}
-
-        final_output = json.loads(json.dumps(combined_out))
-
+        final_output = {"data": json_out, "anomalies": anomaly_out}
     # raise value validation error
     except ValueError as e:
         error_message = "Parameter validation error" + current_module \
@@ -123,9 +120,10 @@ def lambda_handler(event, context):
         if (len(error_message)) > 0:
             logger.error(log_message)
             return {"success": False, "error": error_message}
-        else:
-            logger.info("Successfully completed module: " + current_module)
-            return final_output
+
+    logger.info("Successfully completed module: " + current_module)
+    final_output['success'] = True
+    return final_output
 
 
 def marine_mismatch_detector(data, check_column, period_column, identifier_column):
