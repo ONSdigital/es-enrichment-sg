@@ -3,7 +3,7 @@ import os
 
 import pandas as pd
 from botocore.exceptions import ClientError
-from esawsfunctions import funk
+from es_aws_functions import aws_functions
 from marshmallow import Schema, fields
 
 
@@ -23,7 +23,7 @@ def do_merge(input_data, join_data, columns_to_keep, join_column, bucket_name):
     :return outdata: Dataframe with lookup merged on.
     """
     # read and df the joindata
-    join_dataframe = funk.read_dataframe_from_s3(bucket_name, join_data)
+    join_dataframe = aws_functions.read_dataframe_from_s3(bucket_name, join_data)
 
     #  merge joindata onto main dataset using defined join column
     outdata = pd.merge(input_data,
