@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-cd enrichment-deploy-repository
+cd enrichment-repository
 echo Destroying serverless bundle...
 serverless remove --verbose;
