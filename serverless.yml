@@ -1,5 +1,5 @@
 ---
-service: es-enrichment-sg
+service: lg-enrichment-sg
 provider:
   name: aws
   deploymentBucket:
@@ -26,7 +26,7 @@ custom:
 
 functions:
   deploy-enrichment-wrangler:
-    name: es-enrichment-wrangler
+    name: lg-enrichment-wrangler
     handler: enrichment_wrangler.lambda_handler
     package:
       include:
@@ -39,13 +39,14 @@ functions:
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
     tags:
       app: results
+      luke: test
     environment:
       checkpoint: 1
       bucket_name: results-s3-bucket
       identifier_column: responder_id
       in_file_name: test_data_mike_1.json
       incoming_message_group: ingest-takeon-data-out
-      method_name: es-enrichment-method
+      method_name: lg-enrichment-method
       out_file_name: enrichment_out.json
       sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
       sqs_message_group_id: enrichment-out
@@ -55,7 +56,7 @@ functions:
       lookup_info: '{"0":{"file_name":"responder_county_lookup_prod.json","columns_to_keep":["responder_id","county"],"join_column":"responder_id","required":["county"]},"1":{"file_name":"county_lookup_county.json","columns_to_keep":["county_name","region","county","marine"],"join_column":"county","required":["region","marine"]}}'
 
   deploy-enrichment-method:
-    name: es-enrichment-method
+    name: lg-enrichment-method
     handler: enrichment_method.lambda_handler
     package:
       include:
@@ -68,6 +69,7 @@ functions:
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:1
     tags:
       app: results
+      luke: test
     environment:
       bucket_name: results-s3-bucket
 
