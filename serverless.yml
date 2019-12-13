@@ -39,7 +39,6 @@ functions:
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
     tags:
       app: results
-      luke: test
     environment:
       checkpoint: 1
       bucket_name: results-s3-bucket
@@ -69,7 +68,6 @@ functions:
       - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:1
     tags:
       app: results
-      luke: test
     environment:
       bucket_name: results-s3-bucket
 
