@@ -11,6 +11,4 @@ RUN apt-get update -y &&\
     node -v &&\
     apt-get -y install npm &&\
     npm -v &&\
-    npm install -g serverless &&\
-    npm install -g serverless-latest-layer-version &&\
-    npm list | grep serverless-latest-layer-version
+    npm install -g serverless
