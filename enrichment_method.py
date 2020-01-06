@@ -144,7 +144,7 @@ def marine_mismatch_detector(data,
     """
 
     bad_data = data[
-        (survey_column == "076")
+        (data[survey_column] == "076")
         & (data[check_column] == "n")
         ]
     bad_data["issue"] = "Reference should not produce marine data"
@@ -152,7 +152,7 @@ def marine_mismatch_detector(data,
         [
             identifier_column,
             "issue",
-            "survey",
+            survey_column,
             check_column,
             period_column,
         ]

@@ -51,7 +51,7 @@ class TestEnrichment(unittest.TestCase):
                         "RuntimeVariables":
                         {
                             "checkpoint": 666,
-                            "survey_column": "076"
+                            "survey_column": "survey"
                         }
                     }, context_object
                 )
@@ -91,7 +91,7 @@ class TestEnrichment(unittest.TestCase):
                         "RuntimeVariables":
                         {
                             "checkpoint": 666,
-                            "survey_column": "076"
+                            "survey_column": "survey"
                         }
                     }, context_object
                 )
@@ -131,7 +131,7 @@ class TestEnrichment(unittest.TestCase):
                         "RuntimeVariables":
                         {
                             "checkpoint": 666,
-                            "survey_column": "076"
+                            "survey_column": "survey"
                         }
                     }, context_object
                 )
@@ -195,7 +195,7 @@ class TestEnrichment(unittest.TestCase):
                                 "RuntimeVariables":
                                 {
                                     "checkpoint": 666,
-                                    "survey_column": "076"
+                                    "survey_column": "survey"
                                 }
                             },
                             context_object
@@ -260,7 +260,7 @@ class TestEnrichment(unittest.TestCase):
                                 "RuntimeVariables":
                                 {
                                     "checkpoint": 666,
-                                    "survey_column": "076"
+                                    "survey_column": "survey"
                                 }
                             },
                             context_object
@@ -294,7 +294,7 @@ class TestEnrichment(unittest.TestCase):
                         "RuntimeVariables":
                         {
                             "checkpoint": 666,
-                            "survey_column": "076"
+                            "survey_column": "survey"
                         }
                     }, context_object
                 )
@@ -319,7 +319,7 @@ class TestEnrichment(unittest.TestCase):
                         "RuntimeVariables":
                         {
                             "checkpoint": 666,
-                            "survey_column": "076"
+                            "survey_column": "survey"
                         }
                     }, context_object
                 )
@@ -343,7 +343,7 @@ class TestEnrichment(unittest.TestCase):
                         "RuntimeVariables":
                         {
                             "checkpoint": 666,
-                            "survey_column": "076"
+                            "survey_column": "survey"
                         }
                     }, context_object
                 )
@@ -378,12 +378,12 @@ class TestEnrichment(unittest.TestCase):
         )
         test_output = lambda_method_function.marine_mismatch_detector(
             testdata_df,
-            "076",
+            "survey",
             "marine",
             "period",
             "responder_id"
         )
-        assert test_output.shape[0] == 3
+        assert test_output.shape[0] == 1
 
     @mock_s3
     def test_data_enricher(self):
@@ -419,7 +419,7 @@ class TestEnrichment(unittest.TestCase):
             test_output, test_anomalies = lambda_method_function.data_enrichment(
                 testdata_df,
                 "true",
-                "076",
+                "survey",
                 "period",
                 "mike",
                 {
@@ -470,7 +470,7 @@ class TestEnrichment(unittest.TestCase):
             with open("tests/fixtures/test_data.json", "r") as file:
                 testdata = file.read()
             parameters = {"marine_mismatch_check": "true",
-                          "survey_column": "076",
+                          "survey_column": "survey",
                           "period_column": "period",
                           "identifier_column": "responder_id"}
 
@@ -505,7 +505,7 @@ class TestEnrichment(unittest.TestCase):
                     "RuntimeVariables":
                     {
                         "checkpoint": 666,
-                        "survey_column": "076"
+                        "survey_column": "survey"
                     }
                 }, context_object
             )
@@ -528,7 +528,7 @@ class TestEnrichment(unittest.TestCase):
                     "RuntimeVariables":
                     {
                         "checkpoint": 666,
-                        "survey_column": "076"
+                        "survey_column": "survey"
                     }
                 }, context_object
             )
@@ -557,7 +557,7 @@ class TestEnrichment(unittest.TestCase):
             with open("tests/fixtures/test_data.json", "r") as file:
                 testdata = file.read()
             parameters = {"marine_mismatch_check": "true",
-                          "survey_column": "076",
+                          "survey_column": "survey",
                           "period_column": "period",
                           "identifier_column": "responder_id"}
             input = {"data": testdata, "lookups":
@@ -636,7 +636,13 @@ class TestEnrichment(unittest.TestCase):
                         json.dumps({"error": "This is an error message",
                                     "success": False})
                     response = lambda_wrangler_function.lambda_handler(
-                        {"RuntimeVariables": {"checkpoint": 666, "survey_column": "076"}},
+                        {
+                            "RuntimeVariables":
+                            {
+                                "checkpoint": 666,
+                                "survey_column": "survey"
+                            }
+                        },
                         context_object
                     )
 
