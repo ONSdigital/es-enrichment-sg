@@ -69,6 +69,7 @@ def lambda_handler(event, context):
                                                                incoming_message_group)
         # Parameters.
         marine_mismatch_check = config['marine_mismatch_check']
+        survey_column = event['RuntimeVariables']["survey_column"]
         period_column = config['period_column']
         identifier_column = config['identifier_column']
 
@@ -77,16 +78,21 @@ def lambda_handler(event, context):
 
         # Create parameter json from environment variables.
         parameters = {"marine_mismatch_check": marine_mismatch_check,
+                      "survey_column": survey_column,
                       "period_column": period_column,
                       "identifier_column": identifier_column}
 
         logger.info("Retrieved data from s3")
         data_json = data_df.to_json(orient="records")
+        json_payload = {
+            "data": json.dumps(data_json),
+            "lookups": lookup_info,
+            "parameters": json.dumps(parameters),
+            "survey_column": survey_column
+        }
         response = lambda_client.invoke(
             FunctionName=method_name,
-            Payload="{\"data\":" + json.dumps(data_json)
-                    + ", \"lookups\": " + lookup_info
-                    + ", \"parameters\": " + json.dumps(parameters) + "}"
+            Payload=json.dumps(json_payload)
         )
 
         logger.info("Successfully invoked method.")

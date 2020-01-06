@@ -68,6 +68,7 @@ def lambda_handler(event, context):
         logger.info("Retrieved data and behaviour from wrangler.")
 
         identifier_column = parameters["identifier_column"]
+        survey_column = parameters["survey_column"]
         period_column = parameters["period_column"]
         marine_mismatch_check = parameters["marine_mismatch_check"]
         logger.info("Retrieved parameters from event.")
@@ -78,6 +79,7 @@ def lambda_handler(event, context):
 
         enriched_df, anomalies = data_enrichment(input_data,
                                                  marine_mismatch_check,
+                                                 survey_column,
                                                  period_column,
                                                  bucket_name,
                                                  lookups,
@@ -126,10 +128,15 @@ def lambda_handler(event, context):
     return final_output
 
 
-def marine_mismatch_detector(data, check_column, period_column, identifier_column):
+def marine_mismatch_detector(data,
+                             survey_column,
+                             check_column,
+                             period_column,
+                             identifier_column):
     """
     Detects references that are producing marine but from a county that doesnt produce marine  # noqa: E501
     :param data: Input data after having been merged with responder_county_lookup - DataFrame
+    :param survey_column: Survey code value - String
     :param check_column: column to check against(marine) - String
     :param period_column: Column that holds the period - String
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
@@ -137,7 +144,7 @@ def marine_mismatch_detector(data, check_column, period_column, identifier_colum
     """
 
     bad_data = data[
-        (data["survey"] == "076")
+        (survey_column == "076")
         & (data[check_column] == "n")
         ]
     bad_data["issue"] = "Reference should not produce marine data"
@@ -175,6 +182,7 @@ def missing_column_detector(data, columns_to_check, identifier_column):
 
 def data_enrichment(data_df,
                     marine_mismatch_check,
+                    survey_column,
                     period_column,
                     bucket_name,
                     lookups,
@@ -184,6 +192,7 @@ def data_enrichment(data_df,
     mismatch, unallocated county, and unallocated region are performed at this point.
     :param data_df: DataFrame of data to be enriched - dataframe
     :param marine_mismatch_check: True/False - Should check be done  - String
+    :param survey_column: Survey code value - String
     :param period_column: Column that holds period. (period) - String
     :param bucket_name: Name of the s3 bucket - String
     :param lookups: Information about lookups required. - String(json)
@@ -216,6 +225,7 @@ def data_enrichment(data_df,
     if marine_mismatch_check == "true":
         marine_anomalies = marine_mismatch_detector(
             data_df,
+            survey_column,
             "marine",
             period_column,
             identifier_column,
