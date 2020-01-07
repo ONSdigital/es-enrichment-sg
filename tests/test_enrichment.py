@@ -469,23 +469,27 @@ class TestEnrichment(unittest.TestCase):
 
             with open("tests/fixtures/test_data.json", "r") as file:
                 testdata = file.read()
-            parameters = {"marine_mismatch_check": "true",
-                          "survey_column": "survey",
-                          "period_column": "period",
-                          "identifier_column": "responder_id"}
 
-            input = {"data": testdata, "lookups": {
-                "0": {"file_name": "responderlookup",
-                      "columns_to_keep": ["responder_id", "county"],
-                      "join_column": "responder_id",
-                      "required": ["county"]},
-                "1": {"file_name": "countylookup",
-                      "columns_to_keep": ["county_name",
-                                          "region", "county",
-                                          "marine"],
-                      "join_column": "county",
-                      "required": ["region", "marine"]}},
-                     "parameters": parameters}
+            input = {
+                "data": testdata, "lookups": {
+                    "0": {
+                        "file_name": "responderlookup",
+                        "columns_to_keep": ["responder_id", "county"],
+                        "join_column": "responder_id",
+                        "required": ["county"]
+                    }, "1": {
+                        "file_name": "countylookup",
+                        "columns_to_keep": ["county_name",
+                                            "region", "county",
+                                            "marine"],
+                        "join_column": "county",
+                        "required": ["region", "marine"]
+                        }
+                }, "marine_mismatch_check": "true",
+                   "survey_column": "survey",
+                   "period_column": "period",
+                   "identifier_column": "responder_id"
+            }
             test_output = lambda_method_function.lambda_handler(input, context_object)
             test_output = pd.read_json(test_output["data"])
             assert "county" in test_output.columns.values
@@ -556,15 +560,20 @@ class TestEnrichment(unittest.TestCase):
         ):
             with open("tests/fixtures/test_data.json", "r") as file:
                 testdata = file.read()
-            parameters = {"marine_mismatch_check": "true",
-                          "survey_column": "survey",
-                          "period_column": "period",
-                          "identifier_column": "responder_id"}
-            input = {"data": testdata, "lookups":
-                     {"0": {"required": "yup",
-                      "file_name": "mike",
-                            "columns_to_keep": "moo",
-                            "join_column": "fred"}}, "parameters": parameters}
+
+            input = {
+                "data": testdata, "lookups": {
+                    "0": {
+                        "required": "yup",
+                        "file_name": "mike",
+                        "columns_to_keep": "moo",
+                        "join_column": "fred"
+                    }
+                }, "marine_mismatch_check": "true",
+                   "survey_column": "survey",
+                   "period_column": "period",
+                   "identifier_column": "responder_id"
+            }
             response = lambda_method_function.lambda_handler(
                 input, context_object
             )

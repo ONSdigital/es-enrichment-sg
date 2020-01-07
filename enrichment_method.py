@@ -64,13 +64,12 @@ def lambda_handler(event, context):
         # Retrieve data and behaviour information
         data = event['data']
         lookups = event['lookups']
-        parameters = event['parameters']
         logger.info("Retrieved data and behaviour from wrangler.")
 
-        identifier_column = parameters["identifier_column"]
-        survey_column = parameters["survey_column"]
-        period_column = parameters["period_column"]
-        marine_mismatch_check = parameters["marine_mismatch_check"]
+        identifier_column = event["identifier_column"]
+        survey_column = event["survey_column"]
+        period_column = event["period_column"]
+        marine_mismatch_check = event["marine_mismatch_check"]
         logger.info("Retrieved parameters from event.")
 
         input_data = pd.read_json(data)

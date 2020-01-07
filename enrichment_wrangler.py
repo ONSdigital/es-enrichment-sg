@@ -76,18 +76,15 @@ def lambda_handler(event, context):
         # Lookup info.
         lookup_info = config['lookup_info']
 
-        # Create parameter json from environment variables.
-        parameters = {"marine_mismatch_check": marine_mismatch_check,
-                      "survey_column": survey_column,
-                      "period_column": period_column,
-                      "identifier_column": identifier_column}
-
         logger.info("Retrieved data from s3")
         data_json = data_df.to_json(orient="records")
         json_payload = {
             "data": json.dumps(data_json),
             "lookups": lookup_info,
-            "parameters": json.dumps(parameters),
+            "marine_mismatch_check": marine_mismatch_check,
+            "survey_column": survey_column,
+            "period_column": period_column,
+            "identifier_column": identifier_column,
             "survey_column": survey_column
         }
         response = lambda_client.invoke(
