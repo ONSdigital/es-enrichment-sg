@@ -47,7 +47,13 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
+                    {
+                        "RuntimeVariables":
+                        {
+                            "checkpoint": 666,
+                            "survey_column": "survey"
+                        }
+                    }, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -81,7 +87,13 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mocked:
                 mocked.side_effect = KeyError("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
+                    {
+                        "RuntimeVariables":
+                        {
+                            "checkpoint": 666,
+                            "survey_column": "survey"
+                        }
+                    }, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -115,7 +127,13 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
+                    {
+                        "RuntimeVariables":
+                        {
+                            "checkpoint": 666,
+                            "survey_column": "survey"
+                        }
+                    }, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -173,7 +191,13 @@ class TestEnrichment(unittest.TestCase):
                              "data": file.read(), "success": True, "anomalies": []
                             })
                         response = lambda_wrangler_function.lambda_handler(
-                            {"RuntimeVariables": {"checkpoint": 666}},
+                            {
+                                "RuntimeVariables":
+                                {
+                                    "checkpoint": 666,
+                                    "survey_column": "survey"
+                                }
+                            },
                             context_object
                         )
 
@@ -232,7 +256,13 @@ class TestEnrichment(unittest.TestCase):
                             "Payload": StreamingBody(file, 1)
                         }
                         response = lambda_wrangler_function.lambda_handler(
-                            {"RuntimeVariables": {"checkpoint": 666}},
+                            {
+                                "RuntimeVariables":
+                                {
+                                    "checkpoint": 666,
+                                    "survey_column": "survey"
+                                }
+                            },
                             context_object
                         )
                         assert "success" in response
@@ -260,7 +290,13 @@ class TestEnrichment(unittest.TestCase):
             },
         ):
             response = lambda_wrangler_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
+                    {
+                        "RuntimeVariables":
+                        {
+                            "checkpoint": 666,
+                            "survey_column": "survey"
+                        }
+                    }, context_object
                 )
             assert "success" in response
             assert response["success"] is False
@@ -279,7 +315,13 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
                 mocked.side_effect = Exception("SQS Failure")
                 response = lambda_method_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
+                    {
+                        "RuntimeVariables":
+                        {
+                            "checkpoint": 666,
+                            "survey_column": "survey"
+                        }
+                    }, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -297,7 +339,13 @@ class TestEnrichment(unittest.TestCase):
             with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
                 mocked.side_effect = KeyError("SQS Failure")
                 response = lambda_method_function.lambda_handler(
-                    {"RuntimeVariables": {"checkpoint": 666}}, context_object
+                    {
+                        "RuntimeVariables":
+                        {
+                            "checkpoint": 666,
+                            "survey_column": "survey"
+                        }
+                    }, context_object
                 )
                 assert "success" in response
                 assert response["success"] is False
@@ -330,6 +378,7 @@ class TestEnrichment(unittest.TestCase):
         )
         test_output = lambda_method_function.marine_mismatch_detector(
             testdata_df,
+            "survey",
             "marine",
             "period",
             "responder_id"
@@ -370,6 +419,7 @@ class TestEnrichment(unittest.TestCase):
             test_output, test_anomalies = lambda_method_function.data_enrichment(
                 testdata_df,
                 "true",
+                "survey",
                 "period",
                 "mike",
                 {
@@ -419,21 +469,27 @@ class TestEnrichment(unittest.TestCase):
 
             with open("tests/fixtures/test_data.json", "r") as file:
                 testdata = file.read()
-            parameters = {"marine_mismatch_check": "true", "period_column": "period",
-                          "identifier_column": "responder_id"}
 
-            input = {"data": testdata, "lookups": {
-                "0": {"file_name": "responderlookup",
-                      "columns_to_keep": ["responder_id", "county"],
-                      "join_column": "responder_id",
-                      "required": ["county"]},
-                "1": {"file_name": "countylookup",
-                      "columns_to_keep": ["county_name",
-                                          "region", "county",
-                                          "marine"],
-                      "join_column": "county",
-                      "required": ["region", "marine"]}},
-                     "parameters": parameters}
+            input = {
+                "data": testdata, "lookups": {
+                    "0": {
+                        "file_name": "responderlookup",
+                        "columns_to_keep": ["responder_id", "county"],
+                        "join_column": "responder_id",
+                        "required": ["county"]
+                    }, "1": {
+                        "file_name": "countylookup",
+                        "columns_to_keep": ["county_name",
+                                            "region", "county",
+                                            "marine"],
+                        "join_column": "county",
+                        "required": ["region", "marine"]
+                        }
+                }, "marine_mismatch_check": "true",
+                   "survey_column": "survey",
+                   "period_column": "period",
+                   "identifier_column": "responder_id"
+            }
             test_output = lambda_method_function.lambda_handler(input, context_object)
             test_output = pd.read_json(test_output["data"])
             assert "county" in test_output.columns.values
@@ -449,7 +505,13 @@ class TestEnrichment(unittest.TestCase):
             lambda_method_function.os.environ, {"sqs_queue_url": sqs_queue_url}
         ):
             out = lambda_method_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, context_object
+                {
+                    "RuntimeVariables":
+                    {
+                        "checkpoint": 666,
+                        "survey_column": "survey"
+                    }
+                }, context_object
             )
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
@@ -466,7 +528,13 @@ class TestEnrichment(unittest.TestCase):
             {"checkpoint": "1", "sqs_queue_url": sqs_queue_url},
         ):
             out = lambda_wrangler_function.lambda_handler(
-                {"RuntimeVariables": {"checkpoint": 666}}, context_object
+                {
+                    "RuntimeVariables":
+                    {
+                        "checkpoint": 666,
+                        "survey_column": "survey"
+                    }
+                }, context_object
             )
             self.assertRaises(ValueError)
             assert(out['error'].__contains__
@@ -492,13 +560,20 @@ class TestEnrichment(unittest.TestCase):
         ):
             with open("tests/fixtures/test_data.json", "r") as file:
                 testdata = file.read()
-            parameters = {"marine_mismatch_check": "true", "period_column": "period",
-                          "identifier_column": "responder_id"}
-            input = {"data": testdata, "lookups":
-                     {"0": {"required": "yup",
-                      "file_name": "mike",
-                            "columns_to_keep": "moo",
-                            "join_column": "fred"}}, "parameters": parameters}
+
+            input = {
+                "data": testdata, "lookups": {
+                    "0": {
+                        "required": "yup",
+                        "file_name": "mike",
+                        "columns_to_keep": "moo",
+                        "join_column": "fred"
+                    }
+                }, "marine_mismatch_check": "true",
+                   "survey_column": "survey",
+                   "period_column": "period",
+                   "identifier_column": "responder_id"
+            }
             response = lambda_method_function.lambda_handler(
                 input, context_object
             )
@@ -570,7 +645,13 @@ class TestEnrichment(unittest.TestCase):
                         json.dumps({"error": "This is an error message",
                                     "success": False})
                     response = lambda_wrangler_function.lambda_handler(
-                        {"RuntimeVariables": {"checkpoint": 666}},
+                        {
+                            "RuntimeVariables":
+                            {
+                                "checkpoint": 666,
+                                "survey_column": "survey"
+                            }
+                        },
                         context_object
                     )
 

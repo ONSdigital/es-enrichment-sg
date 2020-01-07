@@ -1,5 +1,6 @@
 [
  {
+   "survey": "076",
    "period": 201809,
    "responder_id": 666,
    "response_type": 2,
@@ -14,13 +15,13 @@
    "Q606_other_gravel": 0,
    "Q607_constructional_fill": 0,
    "Q608_total": 54524,
-   "land_or_marine": "M",
    "manifest_rowcount": 815,
    "manifest_runid": "SNG_201809_107_LG",
    "manifest_system": "BMI_SAND_AND_GRAVEL",
    "manifest_timestamp": "2018-11-20T17:14:41.541"
  },
  {
+   "survey": "066",
    "period": 201809,
    "responder_id": 667,
    "response_type": 2,
@@ -35,13 +36,13 @@
    "Q606_other_gravel": 111281,
    "Q607_constructional_fill": 2489,
    "Q608_total": 183229,
-   "land_or_marine": "L",
    "manifest_rowcount": 815,
    "manifest_runid": "SNG_201809_107_LG",
    "manifest_system": "BMI_SAND_AND_GRAVEL",
    "manifest_timestamp": "2018-11-20T17:14:41.541"
  },
  {
+   "survey": "066",
    "period": 201809,
    "responder_id": 668,
    "response_type": 2,
@@ -56,13 +57,13 @@
    "Q606_other_gravel": 1213,
    "Q607_constructional_fill": 1132,
    "Q608_total": 131,
-   "land_or_marine": "L",
    "manifest_rowcount": 815,
    "manifest_runid": "SNG_201809_107_LG",
    "manifest_system": "BMI_SAND_AND_GRAVEL",
    "manifest_timestamp": "2018-11-20T17:14:41.541"
  },
  {
+   "survey": "066",
    "period": 201809,
    "responder_id": 669,
    "response_type": 1,
@@ -77,13 +78,13 @@
    "Q606_other_gravel": 23,
    "Q607_constructional_fill": 432,
    "Q608_total": 3214,
-   "land_or_marine": "L",
    "manifest_rowcount": 815,
    "manifest_runid": "SNG_201809_107_LG",
    "manifest_system": "BMI_SAND_AND_GRAVEL",
    "manifest_timestamp": "2018-11-20T17:14:41.541"
  },
  {
+   "survey": "066",
    "period": 201809,
    "responder_id": 670,
    "response_type": 2,
@@ -98,13 +99,13 @@
    "Q606_other_gravel": 21564,
    "Q607_constructional_fill": 0,
    "Q608_total": 89722,
-   "land_or_marine": "L",
    "manifest_rowcount": 815,
    "manifest_runid": "SNG_201809_107_LG",
    "manifest_system": "BMI_SAND_AND_GRAVEL",
    "manifest_timestamp": "2018-11-20T17:14:41.541"
  },
  {
+   "survey": "066",
    "period": 201809,
    "responder_id": 671,
    "response_type": 2,
@@ -119,13 +120,13 @@
    "Q606_other_gravel": 13,
    "Q607_constructional_fill": 7,
    "Q608_total": 1697,
-   "land_or_marine": "L",
    "manifest_rowcount": 815,
    "manifest_runid": "SNG_201809_107_LG",
    "manifest_system": "BMI_SAND_AND_GRAVEL",
    "manifest_timestamp": "2018-11-20T17:14:41.541"
  },
  {
+   "survey": "066",
    "period": 201809,
    "responder_id": 672,
    "response_type": 1,
@@ -140,13 +141,13 @@
    "Q606_other_gravel": 32,
    "Q607_constructional_fill": 132,
    "Q608_total": 2,
-   "land_or_marine": "L",
    "manifest_rowcount": 815,
    "manifest_runid": "SNG_201809_107_LG",
    "manifest_system": "BMI_SAND_AND_GRAVEL",
    "manifest_timestamp": "2018-11-20T17:14:41.541"
  },
  {
+   "survey": "066",
    "period": 201809,
    "responder_id": 673,
    "response_type": 2,
@@ -161,7 +162,6 @@
    "Q606_other_gravel": 132,
    "Q607_constructional_fill": 432,
    "Q608_total": 3214,
-   "land_or_marine": "L",
    "manifest_rowcount": 815,
    "manifest_runid": "SNG_201809_107_LG",
    "manifest_system": "BMI_SAND_AND_GRAVEL",
