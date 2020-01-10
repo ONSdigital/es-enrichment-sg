@@ -471,7 +471,7 @@ class TestEnrichment(unittest.TestCase):
                 testdata = file.read()
 
             input = {
-                "data": testdata, "lookups": {
+                "data": testdata, "lookups": json.dumps({
                     "0": {
                         "file_name": "responderlookup",
                         "columns_to_keep": ["responder_id", "county"],
@@ -485,10 +485,10 @@ class TestEnrichment(unittest.TestCase):
                         "join_column": "county",
                         "required": ["region", "marine"]
                         }
-                }, "marine_mismatch_check": "true",
-                   "survey_column": "survey",
-                   "period_column": "period",
-                   "identifier_column": "responder_id"
+                }), "marine_mismatch_check": "true",
+                    "survey_column": "survey",
+                    "period_column": "period",
+                    "identifier_column": "responder_id"
             }
             test_output = lambda_method_function.lambda_handler(input, context_object)
             test_output = pd.read_json(test_output["data"])
@@ -562,17 +562,17 @@ class TestEnrichment(unittest.TestCase):
                 testdata = file.read()
 
             input = {
-                "data": testdata, "lookups": {
+                "data": testdata, "lookups": json.dumps({
                     "0": {
                         "required": "yup",
                         "file_name": "mike",
                         "columns_to_keep": "moo",
                         "join_column": "fred"
                     }
-                }, "marine_mismatch_check": "true",
-                   "survey_column": "survey",
-                   "period_column": "period",
-                   "identifier_column": "responder_id"
+                }), "marine_mismatch_check": "true",
+                    "survey_column": "survey",
+                    "period_column": "period",
+                    "identifier_column": "responder_id"
             }
             response = lambda_method_function.lambda_handler(
                 input, context_object

@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -63,7 +64,7 @@ def lambda_handler(event, context):
 
         # Retrieve data and behaviour information
         data = event['data']
-        lookups = event['lookups']
+        lookups = json.loads(event['lookups'])
         logger.info("Retrieved data and behaviour from wrangler.")
 
         identifier_column = event["identifier_column"]
