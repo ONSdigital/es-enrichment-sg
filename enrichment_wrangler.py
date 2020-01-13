@@ -79,12 +79,14 @@ def lambda_handler(event, context):
         logger.info("Retrieved data from s3")
         data_json = data_df.to_json(orient="records")
         json_payload = {
-            "data": data_json,
-            "lookups": lookup_info,
-            "marine_mismatch_check": marine_mismatch_check,
-            "survey_column": survey_column,
-            "period_column": period_column,
-            "identifier_column": identifier_column,
+            "RuntimeVariables": {
+                "data": data_json,
+                "lookups": lookup_info,
+                "marine_mismatch_check": marine_mismatch_check,
+                "survey_column": survey_column,
+                "period_column": period_column,
+                "identifier_column": identifier_column
+            }
         }
         response = lambda_client.invoke(
             FunctionName=method_name,

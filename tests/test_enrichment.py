@@ -74,7 +74,7 @@ class TestEnrichment(unittest.TestCase):
 
         test_generic_library.client_error()
 
-    @parameterized.expand([(lambda_method_function, ""), (lambda_wrangler_function, "")])
+    @parameterized.expand([(lambda_method_function, ), (lambda_wrangler_function, )])
     def test_value_error(self, which_lambda):
         test_generic_library.value_error(
             which_lambda, bad_runtime_variables, bad_environment_variables

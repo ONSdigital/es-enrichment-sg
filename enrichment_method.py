@@ -63,14 +63,14 @@ def lambda_handler(event, context):
         logger.info("Retrieved configuration variable.")
 
         # Retrieve data and behaviour information
-        data = event['data']
-        lookups = json.loads(event['lookups'])
+        data = event['RuntimeVariables']['data']
+        lookups = json.loads(event['RuntimeVariables']['lookups'])
         logger.info("Retrieved data and behaviour from wrangler.")
 
-        identifier_column = event["identifier_column"]
-        survey_column = event["survey_column"]
-        period_column = event["period_column"]
-        marine_mismatch_check = event["marine_mismatch_check"]
+        identifier_column = event['RuntimeVariables']["identifier_column"]
+        survey_column = event['RuntimeVariables']["survey_column"]
+        period_column = event['RuntimeVariables']["period_column"]
+        marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
         logger.info("Retrieved parameters from event.")
 
         input_data = pd.read_json(data)
