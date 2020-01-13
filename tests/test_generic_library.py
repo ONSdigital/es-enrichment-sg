@@ -22,12 +22,17 @@ def mocked_sqs():
 mock_sqs_queue_url = mocked_sqs()
 
 
-def client_error(lambda_function, runtime_variables, environment_variables):
+def client_error(lambda_function, runtime_variables, environment_variables, file_name):
     with mock.patch.dict(lambda_function.os.environ, environment_variables):
+        if "data" in runtime_variables["RuntimeVariables"].keys():
+            with open(file_name, "r") as file:
+                test_data = file.read()
+            runtime_variables["RuntimeVariables"]["data"] = test_data
+
         output = lambda_function.lambda_handler(runtime_variables, context_object)
 
-        assert 'error' in output.keys()
-        assert output["error"].__contains__("""AWS Error""")
+    assert 'error' in output.keys()
+    assert output["error"].__contains__("""AWS Error""")
 
 
 def value_error(lambda_function, runtime_variables, environment_variables):

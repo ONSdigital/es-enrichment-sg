@@ -1,4 +1,3 @@
-import copy
 import json
 import unittest
 
@@ -35,19 +34,21 @@ bad_runtime_variables = {
 }
 
 method_runtime_variables = {
-    "data": "to_be_filled_by_test",
-    "lookups": json.dumps({
-        "0": {
-            "required": "yes",
-            "file_name": "test_lookup",
-            "columns_to_keep": ["county", "region"],
-            "join_column": "county"
-        }
-    }),
-    "marine_mismatch_check": "true",
-    "survey_column": "survey",
-    "period_column": "period",
-    "identifier_column": "responder_id"
+    "RuntimeVariables": {
+        "data": None,
+        "lookups": json.dumps({
+            "0": {
+                "required": "yes",
+                "file_name": "test_lookup",
+                "columns_to_keep": ["county", "region"],
+                "join_column": "county"
+            }
+        }),
+        "marine_mismatch_check": "true",
+        "survey_column": "survey",
+        "period_column": "period",
+        "identifier_column": "responder_id"
+    }
 }
 
 wrangler_runtime_variables = {
@@ -63,16 +64,14 @@ class TestEnrichment(unittest.TestCase):
 
     @parameterized.expand([
         (lambda_method_function, method_runtime_variables,
-         method_environment_variables),
+         method_environment_variables, "tests/fixtures/test_data.json"),
         (lambda_wrangler_function, wrangler_runtime_variables,
-         wrangler_environment_variables)
+         wrangler_environment_variables, None)
     ])
     def test_client_error(self, which_lambda, which_runtime_variables,
                           which_environment_variables, which_data):
-        with open(test_data, "r") as file:
-            test_data = file.read()
-
-        test_generic_library.client_error()
+        test_generic_library.client_error(which_lambda, which_runtime_variables,
+                                          which_environment_variables, which_data)
 
     @parameterized.expand([(lambda_method_function, ), (lambda_wrangler_function, )])
     def test_value_error(self, which_lambda):

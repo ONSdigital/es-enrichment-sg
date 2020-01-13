@@ -96,7 +96,7 @@ def lambda_handler(event, context):
         final_output = {"data": json_out, "anomalies": anomaly_out}
     # raise value validation error
     except ValueError as e:
-        error_message = "Parameter validation error" + current_module \
+        error_message = "Parameter validation error " + current_module \
                         + " |- " + str(e.args) + " | Request ID: " \
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
