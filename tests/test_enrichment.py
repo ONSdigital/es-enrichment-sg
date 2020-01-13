@@ -73,6 +73,17 @@ class TestEnrichment(unittest.TestCase):
         test_generic_library.client_error(which_lambda, which_runtime_variables,
                                           which_environment_variables, which_data)
 
+    @parameterized.expand([
+        (lambda_method_function, method_runtime_variables,
+         method_environment_variables, "enrichment_method.EnvironSchema"),
+        (lambda_wrangler_function, wrangler_runtime_variables,
+         wrangler_environment_variables, "enrichment_wrangler.EnvironSchema")
+    ])
+    def test_general_error(self, which_lambda, which_runtime_variables,
+                           which_environment_variables, chosen_exception):
+        test_generic_library.general_error(which_lambda, which_runtime_variables,
+                                           which_environment_variables, chosen_exception)
+
     @parameterized.expand([(lambda_method_function, ), (lambda_wrangler_function, )])
     def test_value_error(self, which_lambda):
         test_generic_library.value_error(

@@ -35,6 +35,18 @@ def client_error(lambda_function, runtime_variables, environment_variables, file
     assert output["error"].__contains__("""AWS Error""")
 
 
+def general_error(lambda_function, runtime_variables,
+                  environment_variables, chosen_exception):
+    with mock.patch(chosen_exception) as mock_schema:
+        mock_schema.side_effect = Exception("Failed To Log")
+
+        with mock.patch.dict(lambda_function.os.environ, environment_variables):
+            output = lambda_function.lambda_handler(runtime_variables, context_object)
+
+    assert 'error' in output.keys()
+    assert output["error"].__contains__("""General Error""")
+
+
 def value_error(lambda_function, runtime_variables, environment_variables):
     environment_variables["sqs_queue_url"] = mock_sqs_queue_url
 
@@ -42,4 +54,4 @@ def value_error(lambda_function, runtime_variables, environment_variables):
         output = lambda_function.lambda_handler(runtime_variables, context_object)
 
     assert 'error' in output.keys()
-    assert (output['error'].__contains__("""Parameter validation error"""))
+    assert (output['error'].__contains__("""Parameter Validation Error"""))
