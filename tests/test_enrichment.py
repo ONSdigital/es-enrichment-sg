@@ -6,7 +6,7 @@ from parameterized import parameterized
 
 import enrichment_method as lambda_method_function
 import enrichment_wrangler as lambda_wrangler_function
-from tests import test_librarymarsh
+from tests import test_generic_library
 
 bad_environment_variables = {"checkpoint": "test"}
 
@@ -72,10 +72,10 @@ class TestEnrichment(unittest.TestCase):
         with open(test_data, "r") as file:
             test_data = file.read()
 
-        test_librarymarsh.client_error()
+        test_generic_library.client_error()
 
     @parameterized.expand([(lambda_method_function, ""), (lambda_wrangler_function, "")])
     def test_value_error(self, which_lambda):
-        test_librarymarsh.value_error(
+        test_generic_library.value_error(
             which_lambda, bad_runtime_variables, bad_environment_variables
         )
