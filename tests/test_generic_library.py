@@ -4,7 +4,6 @@ from unittest import mock
 import boto3
 import pandas as pd
 from botocore.response import StreamingBody
-from moto import mock_sqs, mock_s3, mock_lambda
 
 
 class MockContext:
