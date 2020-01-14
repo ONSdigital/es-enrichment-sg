@@ -14,15 +14,26 @@ class MockContext:
 context_object = MockContext()
 
 
-@mock_sqs
-def mocked_sqs():
-    sqs = boto3.resource("sqs", region_name="eu-west-2")
-    sqs.create_queue(QueueName="test_queue")
-    sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-    return sqs_queue_url
+def create_bucket():
+    client = boto3.client(
+        "s3",
+        region_name="eu-west-1",
+        aws_access_key_id="fake_access_key",
+        aws_secret_access_key="fake_secret_key",
+    )
+
+    client.create_bucket(Bucket="test_bucket")
+    return client
 
 
-mock_sqs_queue_url = mocked_sqs()
+def upload_file(client, file_list):
+    for x in file_list:
+        client.upload_file(
+            Filename="tests/fixtures/" + x,
+            Bucket="test_bucket",
+            Key=x,
+        )
+    return client
 
 
 def client_error(lambda_function, runtime_variables, environment_variables, file_name):

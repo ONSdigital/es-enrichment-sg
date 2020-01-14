@@ -64,7 +64,7 @@ def lambda_handler(event, context):
         # Runtime Variables.
         data = event['RuntimeVariables']['data']
         identifier_column = event['RuntimeVariables']["identifier_column"]
-        lookups = json.loads(event['RuntimeVariables']['lookups'])
+        lookups = event['RuntimeVariables']['lookups']
         marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
         period_column = event['RuntimeVariables']["period_column"]
         survey_column = event['RuntimeVariables']["survey_column"]

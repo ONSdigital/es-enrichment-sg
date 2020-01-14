@@ -1,12 +1,29 @@
 import json
 import unittest
+from unittest import mock
 
 import pandas as pd
+from moto import mock_s3
 from parameterized import parameterized
 
 import enrichment_method as lambda_method_function
 import enrichment_wrangler as lambda_wrangler_function
 from tests import test_generic_library
+
+lookups = {
+    "0": {"file_name": "responder_county_lookup.json",
+          "columns_to_keep": ["responder_id", "county"],
+          "join_column": "responder_id",
+          "required": ["county"]
+          },
+    "1": {"file_name": "county_marine_lookup.json",
+          "columns_to_keep": ["county_name",
+                              "region", "county",
+                              "marine"],
+          "join_column": "county",
+          "required": ["region", "marine"]
+          }
+}
 
 bad_environment_variables = {"checkpoint": "test"}
 
@@ -37,14 +54,7 @@ bad_runtime_variables = {
 method_runtime_variables = {
     "RuntimeVariables": {
         "data": None,
-        "lookups": json.dumps({
-            "0": {
-                "required": "yes",
-                "file_name": "test_lookup",
-                "columns_to_keep": ["county", "region"],
-                "join_column": "county"
-            }
-        }),
+        "lookups": lookups,
         "marine_mismatch_check": "true",
         "survey_column": "survey",
         "period_column": "period",
@@ -115,6 +125,28 @@ class GenericErrorsEnrichment(unittest.TestCase):
 
 
 class SpecificFunctionsEnrichment(unittest.TestCase):
+    @mock_s3
+    def test_data_enrichement(self):
+        with mock.patch.dict(lambda_method_function.os.environ,
+                             method_environment_variables):
+            with open("tests/fixtures/test_data.json", "r") as file:
+                test_data = file.read()
+            test_data = pd.DataFrame(json.loads(test_data))
+
+            client = test_generic_library.create_bucket()
+
+            file_list = ["responder_county_lookup.json",
+                         "county_marine_lookup.json"]
+
+            test_generic_library.upload_file(client, file_list)
+
+            output, test_anomalies = lambda_method_function.data_enrichment(
+                test_data, "true", "survey", "period",
+                "test_bucket", lookups, "responder_id"
+            )
+
+            assert "county" in output.columns.values
+            assert "county_name" in output.columns.values
 
     def test_marine_mismatch_detector(self):
         with open("tests/fixtures/test_marine_mismatch_detector_input.json", "r") as file:
