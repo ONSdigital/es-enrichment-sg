@@ -84,6 +84,13 @@ class TestEnrichment(unittest.TestCase):
         test_generic_library.general_error(which_lambda, which_runtime_variables,
                                            which_environment_variables, chosen_exception)
 
+    def test_incomplete_read_error(self):
+        test_generic_library.method_error(lambda_wrangler_function,
+                                          wrangler_runtime_variables,
+                                          wrangler_environment_variables,
+                                          "tests/fixtures/test_data.json",
+                                          "enrichment_wrangler")
+
     @parameterized.expand([
         (lambda_method_function, method_environment_variables),
         (lambda_wrangler_function, wrangler_environment_variables)
