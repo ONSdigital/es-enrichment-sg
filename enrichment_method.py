@@ -56,22 +56,20 @@ def lambda_handler(event, context):
             logger.error(f"Error validating environment params: {errors}")
             raise ValueError(f"Error validating environment params: {errors}")
 
-        logger.info("Validated params.")
+        logger.info("Validated parameters.")
 
+        # Environment Variables.
         bucket_name = config["bucket_name"]
 
-        logger.info("Retrieved configuration variable.")
-
-        # Retrieve data and behaviour information
+        # Runtime Variables.
         data = event['RuntimeVariables']['data']
-        lookups = json.loads(event['RuntimeVariables']['lookups'])
-        logger.info("Retrieved data and behaviour from wrangler.")
-
         identifier_column = event['RuntimeVariables']["identifier_column"]
-        survey_column = event['RuntimeVariables']["survey_column"]
-        period_column = event['RuntimeVariables']["period_column"]
+        lookups = json.loads(event['RuntimeVariables']['lookups'])
         marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
-        logger.info("Retrieved parameters from event.")
+        period_column = event['RuntimeVariables']["period_column"]
+        survey_column = event['RuntimeVariables']["survey_column"]
+
+        logger.info("Retrieved configuration variables.")
 
         input_data = pd.read_json(data)
 
