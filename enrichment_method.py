@@ -22,10 +22,10 @@ def do_merge(input_data, join_data, columns_to_keep, join_column, bucket_name):
     :param bucket_name: Name of bucket to get file - String
     :return outdata: Dataframe with lookup merged on.
     """
-    # read and df the joindata
+    # Read the join data as a df.
     join_dataframe = aws_functions.read_dataframe_from_s3(bucket_name, join_data)
 
-    #  merge joindata onto main dataset using defined join column
+    # Merge join data onto main dataset using defined join column.
     outdata = pd.merge(input_data,
                        join_dataframe[columns_to_keep],
                        on=join_column, how="left")
@@ -40,7 +40,7 @@ def lambda_handler(event, context):
     :return final_output: Dict with "success",
             "data" and "anomalies" or "success and "error".
     """
-    # set up logger
+    # Set up logger.
     current_module = "Enrichment - Method"
     error_message = ''
     log_message = ''
@@ -91,25 +91,25 @@ def lambda_handler(event, context):
         logger.info("DF(s) converted back to JSON.")
 
         final_output = {"data": json_out, "anomalies": anomaly_out}
-    # raise value validation error
+    # Raise value validation error.
     except ValueError as e:
         error_message = "Parameter Validation Error in " + current_module \
                         + " |- " + str(e.args) + " | Request ID: " \
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # raise client based error
+    # Raise client based error.
     except ClientError as e:
         error_message = "AWS Error (" + str(e.response['Error']['Code']) \
                         + ") " + current_module + " |- " + str(e.args) \
                         + " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # raise key/index error
+    # Raise key/index error.
     except KeyError as e:
         error_message = "Key Error in " + current_module + " |- " + \
                         str(e.args) + " | Request ID: " \
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # general exception
+    # General exception.
     except Exception as e:
         error_message = "General Error in " + current_module + \
                         " (" + str(type(e)) + ") |- " + str(e.args) + \
@@ -164,11 +164,11 @@ def missing_column_detector(data, columns_to_check, identifier_column):
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
     :return: data_without_columns: DF containing information about any reference without the column. - DataFrame
     """
-    # Create empty dataframe to hold output
+    # Create empty dataframe to hold output.
     data_without_columns = pd.DataFrame()
 
-    # For each of the passed in columns to check(1 or more)
-    # Create dataframe holding rows where column was null
+    # For each of the passed in columns to check(1 or more).
+    # Create dataframe holding rows where column was null.
     for column_to_check in columns_to_check:
         data_without_column = data[data[column_to_check].isnull()]
         data_without_column["issue"] = str(column_to_check) + " missing in lookup."
@@ -211,14 +211,14 @@ def data_enrichment(data_df,
 
     anomalies = pd.DataFrame()
 
-    # missing column detection
+    # Missing column detection.
     for column in required_columns:
         anomalies = pd.concat([anomalies,
                                missing_column_detector(data_df,
                                                        column,
                                                        identifier_column)])
 
-    # Do Marine mismatch check here
+    # Do Marine mismatch check here.
     if marine_mismatch_check == "true":
         marine_anomalies = marine_mismatch_detector(
             data_df,
