@@ -1,6 +1,7 @@
 import json
 import unittest
 
+import pandas as pd
 from parameterized import parameterized
 
 import enrichment_method as lambda_method_function
@@ -60,7 +61,7 @@ wrangler_runtime_variables = {
 }
 
 
-class TestEnrichment(unittest.TestCase):
+class GenericErrorsEnrichment(unittest.TestCase):
 
     @parameterized.expand([
         (lambda_method_function, method_runtime_variables,
@@ -111,3 +112,29 @@ class TestEnrichment(unittest.TestCase):
         test_generic_library.value_error(
             which_lambda, bad_runtime_variables, bad_environment_variables
         )
+
+
+class SpecificFunctionsEnrichment(unittest.TestCase):
+
+    def test_marine_mismatch_detector(self):
+        with open("tests/fixtures/test_marine_mismatch_detector_input.json", "r") as file:
+            test_data = file.read()
+        test_data = pd.DataFrame(json.loads(test_data))
+
+        output = lambda_method_function.marine_mismatch_detector(
+            test_data,
+            "survey",
+            "marine",
+            "period",
+            "responder_id"
+        )
+
+        assert output['issue'][0].__contains__("""should not produce""")
+
+    def test_missing_column_detector(self):
+        data = pd.DataFrame({"county": [1, None, 2], "responder_id": [666, 123, 8008]})
+
+        output = lambda_method_function.missing_column_detector(
+            data, ["county"], "responder_id")
+
+        assert output['issue'][1].__contains__("""missing in lookup.""")

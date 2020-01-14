@@ -145,7 +145,7 @@ def marine_mismatch_detector(data,
         (data[survey_column] == "076")
         & (data[check_column] == "n")
         ]
-    bad_data["issue"] = "Reference should not produce marine data"
+    bad_data["issue"] = "Reference should not produce marine data."
     return bad_data[
         [
             identifier_column,
@@ -172,7 +172,7 @@ def missing_column_detector(data, columns_to_check, identifier_column):
     # Create dataframe holding rows where column was null
     for column_to_check in columns_to_check:
         data_without_column = data[data[column_to_check].isnull()]
-        data_without_column["issue"] = str(column_to_check) + " missing in lookup"
+        data_without_column["issue"] = str(column_to_check) + " missing in lookup."
         data_without_columns = pd.concat([data_without_columns, data_without_column])
 
     return data_without_columns[[identifier_column, "issue"]]
