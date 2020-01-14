@@ -73,7 +73,7 @@ def lambda_handler(event, context):
         marine_mismatch_check = event["marine_mismatch_check"]
         logger.info("Retrieved parameters from event.")
 
-        input_data = pd.read_json(data)
+        input_data = pd.read_json(data, dtype=False)
 
         logger.info("JSON converted to Pandas DF(s).")
 
