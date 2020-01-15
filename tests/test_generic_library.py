@@ -4,6 +4,7 @@ from unittest import mock
 import boto3
 import pandas as pd
 from botocore.response import StreamingBody
+from moto import mock_sqs, mock_s3, mock_lambda
 
 
 class MockContext:
@@ -16,7 +17,7 @@ context_object = MockContext()
 def create_bucket():
     client = boto3.client(
         "s3",
-        region_name="eu-west-1",
+        region_name="eu-west-2",
         aws_access_key_id="fake_access_key",
         aws_secret_access_key="fake_secret_key",
     )
@@ -75,10 +76,13 @@ def incomplete_read_error(lambda_function, runtime_variables,
                 mock_client_object = mock.Mock()
                 mock_client.return_value = mock_client_object
 
-                mock_client_object.invoke.return_value = {
-                    "Payload": StreamingBody("I'm Bad.", 1)}
+                with open("tests/fixtures/test_incomplete_read_error_input.json", "rb")\
+                        as test_data:
+                    mock_client_object.invoke.return_value = {
+                        "Payload": StreamingBody(test_data, 1)}
 
-                output = lambda_function.lambda_handler(runtime_variables, context_object)
+                    output = lambda_function.lambda_handler(runtime_variables,
+                                                            context_object)
 
     assert 'error' in output.keys()
     assert output["error"].__contains__("""Incomplete Lambda response""")
