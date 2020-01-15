@@ -201,5 +201,37 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
 
         assert output['issue'][1].__contains__("""missing in lookup.""")
 
+    @mock_s3
     def test_wrangler_success(self):
-        print("Not Now.")
+        with open("tests/fixtures/test_data.json", "r") as file:
+            testdata = file.read()
+        testdata = pd.DataFrame(json.loads(testdata))
+
+        bucket_name = method_environment_variables["bucket_name"]
+        test_generic_library.create_bucket(bucket_name)
+
+        with mock.patch.dict(lambda_wrangler_function.os.environ,
+                             wrangler_environment_variables):
+
+            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mock_s3:
+                mock_s3.return_value = testdata, 999
+                with mock.patch(
+                        "enrichment_wrangler.boto3.client"
+                ) as mock_client:
+                    mock_client_object = mock.Mock()
+                    mock_client.return_value = mock_client_object
+                    with open(
+                            "tests/fixtures/test_data_from_method.json", "r"
+                    ) as file:
+                        mock_client_object.invoke.return_value \
+                            .get.return_value.read \
+                            .return_value.decode.return_value = json.dumps({
+                            "data": file.read(), "success": True, "anomalies": []
+                        })
+                        response = lambda_wrangler_function.lambda_handler(
+                            wrangler_runtime_variables,
+                            test_generic_library.context_object
+                        )
+
+                        assert "success" in response
+                        assert response["success"] is True
