@@ -4,6 +4,7 @@ from unittest import mock
 
 import pandas as pd
 from moto import mock_s3
+from pandas.util.testing import assert_frame_equal
 from parameterized import parameterized
 
 import enrichment_method as lambda_method_function
@@ -133,12 +134,13 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
                 test_data = file.read()
             test_data = pd.DataFrame(json.loads(test_data))
 
-            client = test_generic_library.create_bucket()
+            bucket_name = method_environment_variables["bucket_name"]
+            client = test_generic_library.create_bucket(bucket_name)
 
             file_list = ["responder_county_lookup.json",
                          "county_marine_lookup.json"]
 
-            test_generic_library.upload_file(client, file_list)
+            test_generic_library.upload_file(client, bucket_name, file_list)
 
             output, test_anomalies = lambda_method_function.data_enrichment(
                 test_data, "true", "survey", "period",
@@ -163,6 +165,34 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
 
         assert output['issue'][0].__contains__("""should not produce""")
 
+    @mock_s3
+    def test_method_success(self):
+        with mock.patch.dict(lambda_method_function.os.environ,
+                             method_environment_variables):
+            with open("tests/fixtures/test_temp_data.json", "r") as file_1:
+                file_data = file_1.read()
+            prepared_data = pd.DataFrame(json.loads(file_data))
+
+            with open("tests/fixtures/test_data.json", "r") as file_2:
+                test_data = file_2.read()
+            method_runtime_variables["RuntimeVariables"]["data"] = test_data
+
+            bucket_name = method_environment_variables["bucket_name"]
+            client = test_generic_library.create_bucket(bucket_name)
+
+            file_list = ["responder_county_lookup.json",
+                         "county_marine_lookup.json"]
+
+            test_generic_library.upload_file(client, bucket_name, file_list)
+
+            output = lambda_method_function.lambda_handler(
+                method_runtime_variables, test_generic_library.context_object)
+
+            test_output = pd.DataFrame(json.loads(output["data"]))
+
+            assert output["success"]
+            assert_frame_equal(test_output, prepared_data)
+
     def test_missing_column_detector(self):
         data = pd.DataFrame({"county": [1, None, 2], "responder_id": [666, 123, 8008]})
 
@@ -170,3 +200,6 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
             data, ["county"], "responder_id")
 
         assert output['issue'][1].__contains__("""missing in lookup.""")
+
+    def test_wrangler_success(self):
+        print("Not Now.")

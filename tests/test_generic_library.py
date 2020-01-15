@@ -4,7 +4,6 @@ from unittest import mock
 import boto3
 import pandas as pd
 from botocore.response import StreamingBody
-from moto import mock_sqs, mock_s3, mock_lambda
 
 
 class MockContext:
@@ -14,7 +13,7 @@ class MockContext:
 context_object = MockContext()
 
 
-def create_bucket():
+def create_bucket(bucket_name):
     client = boto3.client(
         "s3",
         region_name="eu-west-2",
@@ -22,15 +21,15 @@ def create_bucket():
         aws_secret_access_key="fake_secret_key",
     )
 
-    client.create_bucket(Bucket="test_bucket")
+    client.create_bucket(Bucket=bucket_name)
     return client
 
 
-def upload_file(client, file_list):
+def upload_file(client, bucket_name, file_list):
     for x in file_list:
         client.upload_file(
             Filename="tests/fixtures/" + x,
-            Bucket="test_bucket",
+            Bucket=bucket_name,
             Key=x,
         )
     return client
