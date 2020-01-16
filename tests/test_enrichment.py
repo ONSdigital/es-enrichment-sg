@@ -76,7 +76,7 @@ class GenericErrorsEnrichment(unittest.TestCase):
 
     @parameterized.expand([
         (lambda_method_function, method_runtime_variables,
-         method_environment_variables, "tests/fixtures/test_data.json"),
+         method_environment_variables, "tests/fixtures/test_method_input.json"),
         (lambda_wrangler_function, wrangler_runtime_variables,
          wrangler_environment_variables, None)
     ])
@@ -100,7 +100,7 @@ class GenericErrorsEnrichment(unittest.TestCase):
         test_generic_library.incomplete_read_error(lambda_wrangler_function,
                                                    wrangler_runtime_variables,
                                                    wrangler_environment_variables,
-                                                   "tests/fixtures/test_data.json",
+                                                   "tests/fixtures/test_wrangler_input.json",
                                                    "enrichment_wrangler")
 
     @parameterized.expand([
@@ -115,7 +115,7 @@ class GenericErrorsEnrichment(unittest.TestCase):
         test_generic_library.method_error(lambda_wrangler_function,
                                           wrangler_runtime_variables,
                                           wrangler_environment_variables,
-                                          "tests/fixtures/test_data.json",
+                                          "tests/fixtures/test_wrangler_input.json",
                                           "enrichment_wrangler")
 
     @parameterized.expand([(lambda_method_function, ), (lambda_wrangler_function, )])
@@ -130,7 +130,7 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
     def test_data_enrichement(self):
         with mock.patch.dict(lambda_method_function.os.environ,
                              method_environment_variables):
-            with open("tests/fixtures/test_data.json", "r") as file:
+            with open("tests/fixtures/test_method_input.json", "r") as file:
                 test_data = file.read()
             test_data = pd.DataFrame(json.loads(test_data))
 
@@ -165,11 +165,11 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
     def test_method_success(self):
         with mock.patch.dict(lambda_method_function.os.environ,
                              method_environment_variables):
-            with open("tests/fixtures/test_temp_data.json", "r") as file_1:
+            with open("tests/fixtures/test_method_prepared_output.json", "r") as file_1:
                 file_data = file_1.read()
             prepared_data = pd.DataFrame(json.loads(file_data))
 
-            with open("tests/fixtures/test_data.json", "r") as file_2:
+            with open("tests/fixtures/test_method_input.json", "r") as file_2:
                 test_data = file_2.read()
             method_runtime_variables["RuntimeVariables"]["data"] = test_data
 
@@ -201,11 +201,11 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
     @mock.patch('enrichment_wrangler.aws_functions.save_data',
                 side_effect=test_generic_library.replacement_save_data)
     def test_wrangler_success(self, mock_s3_put):
-        with open("tests/fixtures/test_data.json", "r") as file_1:
+        with open("tests/fixtures/test_wrangler_input.json", "r") as file_1:
             test_data_in = file_1.read()
         test_data_in = pd.DataFrame(json.loads(test_data_in))
 
-        with open("tests/fixtures/test_data_from_method.json", "r") as file_2:
+        with open("tests/fixtures/test_method_output.json", "r") as file_2:
             test_data_out = file_2.read()
 
         bucket_name = method_environment_variables["bucket_name"]
@@ -240,7 +240,7 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
         with open("tests/fixtures/" + wrangler_environment_variables["out_file_name"],
                   "r") as file_4:
             test_data_produced = file_4.read()
-        produced_data = pd.DataFrame(json.loads(test_data_produced)["data"])
+        produced_data = pd.DataFrame(json.loads(test_data_produced))
 
         assert output
         assert_frame_equal(produced_data, prepared_data)
