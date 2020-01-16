@@ -11,27 +11,6 @@ class EnvironSchema(Schema):
     bucket_name = fields.Str(required=True)
 
 
-def do_merge(input_data, join_data, columns_to_keep, join_column, bucket_name):
-    """
-    Generic merging function.
-
-    :param input_data: Input data from previous step - Dataframe
-    :param join_data: key of lookup file to pick up from s3 - String
-    :param columns_to_keep: List of columns from lookup to pick up - List(String)
-    :param join_column: Column to join lookup on with - String
-    :param bucket_name: Name of bucket to get file - String
-    :return outdata: Dataframe with lookup merged on.
-    """
-    # Read the join data as a df.
-    join_dataframe = aws_functions.read_dataframe_from_s3(bucket_name, join_data)
-
-    # Merge join data onto main dataset using defined join column.
-    outdata = pd.merge(input_data,
-                       join_dataframe[columns_to_keep],
-                       on=join_column, how="left")
-    return outdata
-
-
 def lambda_handler(event, context):
     """
     Performs enrichment process, joining 2 lookups onto data and detecting anomalies.
@@ -125,11 +104,8 @@ def lambda_handler(event, context):
     return final_output
 
 
-def marine_mismatch_detector(data,
-                             survey_column,
-                             check_column,
-                             period_column,
-                             identifier_column):
+def marine_mismatch_detector(data, survey_column, check_column,
+                             period_column, identifier_column):
     """
     Detects references that are producing marine but from a county that doesnt produce marine  # noqa: E501
     :param data: Input data after having been merged with responder_county_lookup - DataFrame
@@ -177,13 +153,8 @@ def missing_column_detector(data, columns_to_check, identifier_column):
     return data_without_columns[[identifier_column, "issue"]]
 
 
-def data_enrichment(data_df,
-                    marine_mismatch_check,
-                    survey_column,
-                    period_column,
-                    bucket_name,
-                    lookups,
-                    identifier_column):
+def data_enrichment(data_df, marine_mismatch_check, survey_column, period_column,
+                    bucket_name, lookups, identifier_column):
     """
     Does the enrichment process by merging together several datasets. Checks for marine
     mismatch, unallocated county, and unallocated region are performed at this point.
@@ -231,3 +202,23 @@ def data_enrichment(data_df,
         anomalies = pd.concat([marine_anomalies, anomalies])
 
     return data_df, anomalies
+
+def do_merge(input_data, join_data, columns_to_keep, join_column, bucket_name):
+    """
+    Generic merging function.
+
+    :param input_data: Input data from previous step - Dataframe
+    :param join_data: key of lookup file to pick up from s3 - String
+    :param columns_to_keep: List of columns from lookup to pick up - List(String)
+    :param join_column: Column to join lookup on with - String
+    :param bucket_name: Name of bucket to get file - String
+    :return outdata: Dataframe with lookup merged on.
+    """
+    # Read the join data as a df.
+    join_dataframe = aws_functions.read_dataframe_from_s3(bucket_name, join_data)
+
+    # Merge join data onto main dataset using defined join column.
+    outdata = pd.merge(input_data,
+                       join_dataframe[columns_to_keep],
+                       on=join_column, how="left")
+    return outdata

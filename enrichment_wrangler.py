@@ -21,7 +21,7 @@ class EnvironSchema(Schema):
     sqs_message_group_id = fields.Str(required=True)
     marine_mismatch_check = fields.Str(required=True)
     period_column = fields.Str(required=True)
-    lookup_info = fields.Str(required=True)
+    lookups = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
         identifier_column = config['identifier_column']
         in_file_name = config["in_file_name"]
         incoming_message_group = config["incoming_message_group"]
-        lookup_info = config['lookup_info']
+        lookups = config['lookups']
         marine_mismatch_check = config['marine_mismatch_check']
         method_name = config["method_name"]
         out_file_name = config["out_file_name"]
@@ -80,7 +80,7 @@ def lambda_handler(event, context):
         json_payload = {
             "RuntimeVariables": {
                 "data": data_json,
-                "lookups": lookup_info,
+                "lookups": lookups,
                 "marine_mismatch_check": marine_mismatch_check,
                 "survey_column": survey_column,
                 "period_column": period_column,

@@ -35,7 +35,7 @@ method_environment_variables = {
 wrangler_environment_variables = {
     "sns_topic_arn": "fake_sns_arn",
     "bucket_name": "test_bucket",
-    "checkpoint": "99",
+    "checkpoint": "999",
     "identifier_column": "responder_id",
     "in_file_name": "fake_in.json",
     "out_file_name": "fake_out.json",
@@ -44,7 +44,7 @@ wrangler_environment_variables = {
     "sqs_message_group_id": "test_id",
     "incoming_message_group": "test_group",
     "period_column": "period",
-    "lookup_info": "insert_fake_here",
+    "lookups": "insert_fake_here",
     "marine_mismatch_check": "true"
 }
 
@@ -66,7 +66,7 @@ method_runtime_variables = {
 wrangler_runtime_variables = {
     "RuntimeVariables":
         {
-            "checkpoint": "test",
+            "checkpoint": "999",
             "survey_column": "survey"
         }
 }
@@ -147,8 +147,8 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
                 "test_bucket", lookups, "responder_id"
             )
 
-            assert "county" in output.columns.values
-            assert "county_name" in output.columns.values
+        assert "county" in output.columns.values
+        assert "county_name" in output.columns.values
 
     def test_marine_mismatch_detector(self):
         with open("tests/fixtures/test_marine_mismatch_detector_input.json", "r") as file:
@@ -156,11 +156,7 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
         test_data = pd.DataFrame(json.loads(test_data))
 
         output = lambda_method_function.marine_mismatch_detector(
-            test_data,
-            "survey",
-            "marine",
-            "period",
-            "responder_id"
+            test_data, "survey", "marine", "period", "responder_id"
         )
 
         assert output['issue'][0].__contains__("""should not produce""")
@@ -190,8 +186,8 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
 
             test_output = pd.DataFrame(json.loads(output["data"]))
 
-            assert output["success"]
-            assert_frame_equal(test_output, prepared_data)
+        assert output["success"]
+        assert_frame_equal(test_output, prepared_data)
 
     def test_missing_column_detector(self):
         data = pd.DataFrame({"county": [1, None, 2], "responder_id": [666, 123, 8008]})
@@ -203,9 +199,12 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
 
     @mock_s3
     def test_wrangler_success(self):
-        with open("tests/fixtures/test_data.json", "r") as file:
-            testdata = file.read()
-        testdata = pd.DataFrame(json.loads(testdata))
+        with open("tests/fixtures/test_data.json", "r") as file_1:
+            test_data_in = file_1.read()
+        test_data_in = pd.DataFrame(json.loads(test_data_in))
+
+        with open("tests/fixtures/test_data_from_method.json", "r") as file_2:
+            test_data_out = file_2.read()
 
         bucket_name = method_environment_variables["bucket_name"]
         test_generic_library.create_bucket(bucket_name)
@@ -213,25 +212,23 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
         with mock.patch.dict(lambda_wrangler_function.os.environ,
                              wrangler_environment_variables):
 
-            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mock_s3:
-                mock_s3.return_value = testdata, 999
-                with mock.patch(
-                        "enrichment_wrangler.boto3.client"
-                ) as mock_client:
+            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe")\
+                    as mock_s3_get:
+                mock_s3_get.return_value = test_data_in, 999
+
+                with mock.patch("enrichment_wrangler.boto3.client") as mock_client:
                     mock_client_object = mock.Mock()
                     mock_client.return_value = mock_client_object
-                    with open(
-                            "tests/fixtures/test_data_from_method.json", "r"
-                    ) as file:
-                        mock_client_object.invoke.return_value \
-                            .get.return_value.read \
-                            .return_value.decode.return_value = json.dumps({
-                            "data": file.read(), "success": True, "anomalies": []
-                        })
-                        response = lambda_wrangler_function.lambda_handler(
-                            wrangler_runtime_variables,
-                            test_generic_library.context_object
-                        )
 
-                        assert "success" in response
-                        assert response["success"] is True
+                    mock_client_object.invoke.return_value.get.return_value.read \
+                        .return_value.decode.return_value = json.dumps({
+                            "data": test_data_out,
+                            "success": True,
+                            "anomalies": []
+                        })
+
+                    output = lambda_wrangler_function.lambda_handler(
+                        wrangler_runtime_variables, test_generic_library.context_object
+                    )
+
+        assert output
