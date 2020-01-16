@@ -26,11 +26,11 @@ def create_bucket(bucket_name):
 
 
 def upload_file(client, bucket_name, file_list):
-    for x in file_list:
+    for file in file_list:
         client.upload_file(
-            Filename="tests/fixtures/" + x,
+            Filename="tests/fixtures/" + file,
             Bucket=bucket_name,
-            Key=x,
+            Key=file,
         )
     return client
 
