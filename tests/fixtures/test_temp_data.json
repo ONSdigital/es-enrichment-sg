@@ -22,7 +22,7 @@
         "region": 6,
         "responder_id": 666,
         "response_type": 2,
-        "survey": 76
+        "survey": "076"
     },
     {
         "Q601_asphalting_sand": 0,
@@ -47,7 +47,7 @@
         "region": 11,
         "responder_id": 667,
         "response_type": 2,
-        "survey": 66
+        "survey": "066"
     },
     {
         "Q601_asphalting_sand": 0,
@@ -72,7 +72,7 @@
         "region": 1,
         "responder_id": 668,
         "response_type": 2,
-        "survey": 66
+        "survey": "066"
     },
     {
         "Q601_asphalting_sand": 1,
@@ -97,7 +97,7 @@
         "region": 10,
         "responder_id": 669,
         "response_type": 1,
-        "survey": 66
+        "survey": "066"
     },
     {
         "Q601_asphalting_sand": 0,
@@ -122,7 +122,7 @@
         "region": 9,
         "responder_id": 670,
         "response_type": 2,
-        "survey": 66
+        "survey": "066"
     },
     {
         "Q601_asphalting_sand": 0,
@@ -147,7 +147,7 @@
         "region": 9,
         "responder_id": 671,
         "response_type": 2,
-        "survey": 66
+        "survey": "066"
     },
     {
         "Q601_asphalting_sand": 0,
@@ -172,7 +172,7 @@
         "region": 9,
         "responder_id": 672,
         "response_type": 1,
-        "survey": 66
+        "survey": "066"
     },
     {
         "Q601_asphalting_sand": 1,
@@ -197,6 +197,6 @@
         "region": 7,
         "responder_id": 673,
         "response_type": 2,
-        "survey": 66
+        "survey": "066"
     }
 ]
