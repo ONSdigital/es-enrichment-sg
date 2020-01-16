@@ -128,3 +128,10 @@ def value_error(lambda_function, runtime_variables, environment_variables):
 
     assert 'error' in output.keys()
     assert output['error'].__contains__("""Parameter Validation Error""")
+
+
+def replacement_save_data(bucket_name, file_name, data,
+                          sqs_queue_url, sqs_message_id):
+    with open("tests/fixtures/" + file_name, 'w', encoding='utf-8') as f:
+        f.write(data)
+        f.close()

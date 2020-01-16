@@ -49,6 +49,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+/tests/fixtures/test_wrangler_out.json
 
 # Translations
 *.mo

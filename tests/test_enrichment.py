@@ -38,7 +38,7 @@ wrangler_environment_variables = {
     "checkpoint": "999",
     "identifier_column": "responder_id",
     "in_file_name": "fake_in.json",
-    "out_file_name": "fake_out.json",
+    "out_file_name": "test_wrangler_out.json",
     "method_name": "enrichment_method",
     "sqs_queue_url": "test_queue",
     "sqs_message_group_id": "test_id",
@@ -184,10 +184,10 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
             output = lambda_method_function.lambda_handler(
                 method_runtime_variables, test_generic_library.context_object)
 
-            test_output = pd.DataFrame(json.loads(output["data"]))
+            produced_data = pd.DataFrame(json.loads(output["data"]))
 
         assert output["success"]
-        assert_frame_equal(test_output, prepared_data)
+        assert_frame_equal(produced_data, prepared_data)
 
     def test_missing_column_detector(self):
         data = pd.DataFrame({"county": [1, None, 2], "responder_id": [666, 123, 8008]})
@@ -198,7 +198,9 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
         assert output['issue'][1].__contains__("""missing in lookup.""")
 
     @mock_s3
-    def test_wrangler_success(self):
+    @mock.patch('enrichment_wrangler.aws_functions.save_data',
+                side_effect=test_generic_library.replacement_save_data)
+    def test_wrangler_success(self, mock_s3_put):
         with open("tests/fixtures/test_data.json", "r") as file_1:
             test_data_in = file_1.read()
         test_data_in = pd.DataFrame(json.loads(test_data_in))
@@ -231,4 +233,14 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
                         wrangler_runtime_variables, test_generic_library.context_object
                     )
 
+        with open("tests/fixtures/test_wrangler_prepared_out.json", "r") as file_3:
+            test_data_prepared = file_3.read()
+        prepared_data = pd.DataFrame(json.loads(test_data_prepared))
+
+        with open("tests/fixtures/" + wrangler_environment_variables["out_file_name"],
+                  "r") as file_4:
+            test_data_produced = file_4.read()
+        produced_data = pd.DataFrame(json.loads(test_data_produced)["data"])
+
         assert output
+        assert_frame_equal(produced_data, prepared_data)

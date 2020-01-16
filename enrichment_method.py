@@ -203,6 +203,7 @@ def data_enrichment(data_df, marine_mismatch_check, survey_column, period_column
 
     return data_df, anomalies
 
+
 def do_merge(input_data, join_data, columns_to_keep, join_column, bucket_name):
     """
     Generic merging function.
