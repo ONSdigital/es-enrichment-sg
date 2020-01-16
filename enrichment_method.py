@@ -49,7 +49,7 @@ def lambda_handler(event, context):
 
         logger.info("Retrieved configuration variables.")
 
-        input_data = pd.read_json(data)
+        input_data = pd.read_json(data, dtype=False)
 
         logger.info("JSON converted to Pandas DF(s).")
 
