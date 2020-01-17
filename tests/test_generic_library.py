@@ -36,6 +36,7 @@ def create_client(client_type, region="eu-west-2"):
       )
     return client
 
+
 def create_bucket(bucket_name):
     """
     Create an s3 bucket.
