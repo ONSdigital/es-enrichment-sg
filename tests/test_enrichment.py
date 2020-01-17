@@ -72,7 +72,7 @@ wrangler_runtime_variables = {
 }
 
 
-class GenericErrorsEnrichment(unittest.TestCase):
+class GenericErrors(unittest.TestCase):
 
     @parameterized.expand([
         (lambda_method_function, method_runtime_variables,
@@ -136,7 +136,7 @@ class GenericErrorsEnrichment(unittest.TestCase):
         )
 
 
-class SpecificFunctionsEnrichment(unittest.TestCase):
+class SpecificFunctions(unittest.TestCase):
     @mock_s3
     def test_data_enrichement(self):
         with mock.patch.dict(lambda_method_function.os.environ,
