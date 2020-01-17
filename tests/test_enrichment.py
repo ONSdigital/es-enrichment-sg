@@ -114,8 +114,7 @@ class GenericErrorsEnrichment(unittest.TestCase):
         (lambda_wrangler_function, wrangler_environment_variables)
     ])
     def test_key_error(self, which_lambda, which_environment_variables):
-        test_generic_library.key_error(which_lambda, bad_runtime_variables,
-                                       which_environment_variables)
+        test_generic_library.key_error(which_lambda, which_environment_variables, bad_runtime_variables)
 
     @mock_s3
     @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
@@ -152,7 +151,7 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
             file_list = ["responder_county_lookup.json",
                          "county_marine_lookup.json"]
 
-            test_generic_library.upload_file(client, bucket_name, file_list)
+            test_generic_library.upload_files(client, bucket_name, file_list)
 
             output, test_anomalies = lambda_method_function.data_enrichment(
                 test_data, "true", "survey", "period",
@@ -191,7 +190,7 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
             file_list = ["responder_county_lookup.json",
                          "county_marine_lookup.json"]
 
-            test_generic_library.upload_file(client, bucket_name, file_list)
+            test_generic_library.upload_files(client, bucket_name, file_list)
 
             output = lambda_method_function.lambda_handler(
                 method_runtime_variables, test_generic_library.context_object)
@@ -221,7 +220,7 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
 
         file_list = ["test_wrangler_input.json"]
 
-        test_generic_library.upload_file(client, bucket_name, file_list)
+        test_generic_library.upload_files(client, bucket_name, file_list)
 
         with open("tests/fixtures/test_method_output.json", "r") as file_2:
             test_data_out = file_2.read()
