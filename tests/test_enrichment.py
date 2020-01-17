@@ -37,8 +37,8 @@ wrangler_environment_variables = {
     "bucket_name": "test_bucket",
     "checkpoint": "999",
     "identifier_column": "responder_id",
-    "in_file_name": "fake_in.json",
-    "out_file_name": "test_wrangler_out.json",
+    "in_file_name": "test_wrangler_input.json",
+    "out_file_name": "test_wrangler_output.json",
     "method_name": "enrichment_method",
     "sqs_queue_url": "test_queue",
     "sqs_message_group_id": "test_id",
@@ -111,7 +111,17 @@ class GenericErrorsEnrichment(unittest.TestCase):
         test_generic_library.key_error(which_lambda, bad_runtime_variables,
                                        which_environment_variables)
 
-    def test_method_error(self):
+    @mock_s3
+    @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
+                side_effect=test_generic_library.replacement_get_dataframe)
+    def test_method_error(self, mock_s3_get):
+        bucket_name = wrangler_environment_variables["bucket_name"]
+        client = test_generic_library.create_bucket(bucket_name)
+
+        file_list = ["test_wrangler_input.json"]
+
+        test_generic_library.upload_file(client, bucket_name, file_list)
+
         test_generic_library.method_error(lambda_wrangler_function,
                                           wrangler_runtime_variables,
                                           wrangler_environment_variables,

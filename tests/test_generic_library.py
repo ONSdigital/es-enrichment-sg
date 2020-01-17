@@ -4,6 +4,7 @@ from unittest import mock
 import boto3
 import pandas as pd
 from botocore.response import StreamingBody
+from es_aws_functions import aws_functions
 
 
 class MockContext:
@@ -98,14 +99,14 @@ def key_error(lambda_function, runtime_variables,
 
 def method_error(lambda_function, runtime_variables,
                  environment_variables, file_name, wrangler_name):
-    with open(file_name, "r") as file:
-        test_data = file.read()
-    test_data = pd.DataFrame(json.loads(test_data))
+    # with open(file_name, "r") as file:
+    #     test_data = file.read()
+    # test_data = pd.DataFrame(json.loads(test_data))
 
     with mock.patch.dict(lambda_function.os.environ, environment_variables):
 
-        with mock.patch(wrangler_name + ".aws_functions.get_dataframe") as mock_s3_get:
-            mock_s3_get.return_value = test_data, 999
+        # with mock.patch(wrangler_name + ".aws_functions.get_dataframe") as mock_s3_get:
+        #     mock_s3_get.return_value = test_data, 999
 
             with mock.patch(wrangler_name + ".boto3.client") as mock_client:
                 mock_client_object = mock.Mock()
@@ -135,3 +136,10 @@ def replacement_save_data(bucket_name, file_name, data,
     with open("tests/fixtures/" + file_name, 'w', encoding='utf-8') as f:
         f.write(data)
         f.close()
+
+
+def replacement_get_dataframe(sqs_queue_url, bucket_name,
+                              in_file_name, incoming_message_group):
+    data = aws_functions.read_dataframe_from_s3(bucket_name, in_file_name)
+
+    return data, 999
