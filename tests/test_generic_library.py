@@ -2,7 +2,6 @@ import json
 from unittest import mock
 
 import boto3
-import pandas as pd
 from botocore.response import StreamingBody
 from es_aws_functions import aws_functions
 
@@ -62,27 +61,24 @@ def general_error(lambda_function, runtime_variables,
 
 
 def incomplete_read_error(lambda_function, runtime_variables,
-                          environment_variables, file_name, wrangler_name):
-    with open(file_name, "r") as file:
-        test_data_in = file.read()
-    test_data_in = pd.DataFrame(json.loads(test_data_in))
+                          environment_variables, file_list, wrangler_name):
+
+    bucket_name = environment_variables["bucket_name"]
+    client = create_bucket(bucket_name)
+    upload_file(client, bucket_name, file_list)
 
     with mock.patch.dict(lambda_function.os.environ, environment_variables):
 
-        with mock.patch(wrangler_name + ".aws_functions.get_dataframe") as mock_s3_get:
-            mock_s3_get.return_value = test_data_in, 999
+        with mock.patch(wrangler_name + ".boto3.client") as mock_client:
+            mock_client_object = mock.Mock()
+            mock_client.return_value = mock_client_object
 
-            with mock.patch(wrangler_name + ".boto3.client") as mock_client:
-                mock_client_object = mock.Mock()
-                mock_client.return_value = mock_client_object
+            with open("tests/fixtures/test_incomplete_read_error_input.json", "rb")\
+                    as test_data_bad:
+                mock_client_object.invoke.return_value = {
+                    "Payload": StreamingBody(test_data_bad, 1)}
 
-                with open("tests/fixtures/test_incomplete_read_error_input.json", "rb")\
-                        as test_data_bad:
-                    mock_client_object.invoke.return_value = {
-                        "Payload": StreamingBody(test_data_bad, 1)}
-
-                    output = lambda_function.lambda_handler(runtime_variables,
-                                                            context_object)
+                output = lambda_function.lambda_handler(runtime_variables, context_object)
 
     assert 'error' in output.keys()
     assert output["error"].__contains__("""Incomplete Lambda response""")
@@ -98,26 +94,24 @@ def key_error(lambda_function, runtime_variables,
 
 
 def method_error(lambda_function, runtime_variables,
-                 environment_variables, file_name, wrangler_name):
-    # with open(file_name, "r") as file:
-    #     test_data = file.read()
-    # test_data = pd.DataFrame(json.loads(test_data))
+                 environment_variables, file_list, wrangler_name):
+
+    bucket_name = environment_variables["bucket_name"]
+    client = create_bucket(bucket_name)
+    upload_file(client, bucket_name, file_list)
 
     with mock.patch.dict(lambda_function.os.environ, environment_variables):
 
-        # with mock.patch(wrangler_name + ".aws_functions.get_dataframe") as mock_s3_get:
-        #     mock_s3_get.return_value = test_data, 999
+        with mock.patch(wrangler_name + ".boto3.client") as mock_client:
+            mock_client_object = mock.Mock()
+            mock_client.return_value = mock_client_object
 
-            with mock.patch(wrangler_name + ".boto3.client") as mock_client:
-                mock_client_object = mock.Mock()
-                mock_client.return_value = mock_client_object
+            mock_client_object.invoke.return_value.get.return_value \
+                .read.return_value.decode.return_value = \
+                json.dumps({"error": "Test Message",
+                            "success": False})
 
-                mock_client_object.invoke.return_value.get.return_value \
-                    .read.return_value.decode.return_value = \
-                    json.dumps({"error": "Test Message",
-                                "success": False})
-
-                output = lambda_function.lambda_handler(runtime_variables, context_object)
+            output = lambda_function.lambda_handler(runtime_variables, context_object)
 
     assert 'error' in output.keys()
     assert output["error"].__contains__("""Test Message""")

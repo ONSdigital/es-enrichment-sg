@@ -96,11 +96,17 @@ class GenericErrorsEnrichment(unittest.TestCase):
         test_generic_library.general_error(which_lambda, which_runtime_variables,
                                            which_environment_variables, chosen_exception)
 
-    def test_incomplete_read_error(self):
+    @mock_s3
+    @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
+                side_effect=test_generic_library.replacement_get_dataframe)
+    def test_incomplete_read_error(self, mock_s3_get):
+
+        file_list = ["test_wrangler_input.json"]
+
         test_generic_library.incomplete_read_error(lambda_wrangler_function,
                                                    wrangler_runtime_variables,
                                                    wrangler_environment_variables,
-                                                   "tests/fixtures/test_wrangler_input.json",
+                                                   file_list,
                                                    "enrichment_wrangler")
 
     @parameterized.expand([
@@ -115,17 +121,13 @@ class GenericErrorsEnrichment(unittest.TestCase):
     @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
                 side_effect=test_generic_library.replacement_get_dataframe)
     def test_method_error(self, mock_s3_get):
-        bucket_name = wrangler_environment_variables["bucket_name"]
-        client = test_generic_library.create_bucket(bucket_name)
 
         file_list = ["test_wrangler_input.json"]
-
-        test_generic_library.upload_file(client, bucket_name, file_list)
 
         test_generic_library.method_error(lambda_wrangler_function,
                                           wrangler_runtime_variables,
                                           wrangler_environment_variables,
-                                          "tests/fixtures/test_wrangler_input.json",
+                                          file_list,
                                           "enrichment_wrangler")
 
     @parameterized.expand([(lambda_method_function, ), (lambda_wrangler_function, )])
@@ -208,40 +210,39 @@ class SpecificFunctionsEnrichment(unittest.TestCase):
         assert output['issue'][1].__contains__("""missing in lookup.""")
 
     @mock_s3
+    @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
+                side_effect=test_generic_library.replacement_get_dataframe)
     @mock.patch('enrichment_wrangler.aws_functions.save_data',
                 side_effect=test_generic_library.replacement_save_data)
-    def test_wrangler_success(self, mock_s3_put):
-        with open("tests/fixtures/test_wrangler_input.json", "r") as file_1:
-            test_data_in = file_1.read()
-        test_data_in = pd.DataFrame(json.loads(test_data_in))
+    def test_wrangler_success(self, mock_s3_get, mock_s3_put):
+
+        bucket_name = wrangler_environment_variables["bucket_name"]
+        client = test_generic_library.create_bucket(bucket_name)
+
+        file_list = ["test_wrangler_input.json"]
+
+        test_generic_library.upload_file(client, bucket_name, file_list)
 
         with open("tests/fixtures/test_method_output.json", "r") as file_2:
             test_data_out = file_2.read()
 
-        bucket_name = method_environment_variables["bucket_name"]
-        test_generic_library.create_bucket(bucket_name)
-
         with mock.patch.dict(lambda_wrangler_function.os.environ,
                              wrangler_environment_variables):
 
-            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe")\
-                    as mock_s3_get:
-                mock_s3_get.return_value = test_data_in, 999
+            with mock.patch("enrichment_wrangler.boto3.client") as mock_client:
+                mock_client_object = mock.Mock()
+                mock_client.return_value = mock_client_object
 
-                with mock.patch("enrichment_wrangler.boto3.client") as mock_client:
-                    mock_client_object = mock.Mock()
-                    mock_client.return_value = mock_client_object
+                mock_client_object.invoke.return_value.get.return_value.read \
+                    .return_value.decode.return_value = json.dumps({
+                        "data": test_data_out,
+                        "success": True,
+                        "anomalies": []
+                    })
 
-                    mock_client_object.invoke.return_value.get.return_value.read \
-                        .return_value.decode.return_value = json.dumps({
-                            "data": test_data_out,
-                            "success": True,
-                            "anomalies": []
-                        })
-
-                    output = lambda_wrangler_function.lambda_handler(
-                        wrangler_runtime_variables, test_generic_library.context_object
-                    )
+                output = lambda_wrangler_function.lambda_handler(
+                    wrangler_runtime_variables, test_generic_library.context_object
+                )
 
         with open("tests/fixtures/test_wrangler_prepared_out.json", "r") as file_3:
             test_data_prepared = file_3.read()
