@@ -9,7 +9,7 @@ from parameterized import parameterized
 
 import enrichment_method as lambda_method_function
 import enrichment_wrangler as lambda_wrangler_function
-from tests import test_generic_library
+from es_aws_functions import test_generic_library
 
 lookups = {
     "0": {"file_name": "responder_county_lookup.json",
