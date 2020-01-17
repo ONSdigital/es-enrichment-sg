@@ -13,14 +13,17 @@ class MockContext:
 context_object = MockContext()
 
 
-def create_bucket(bucket_name):
+def create_client(type, region="eu-west-2"):
     client = boto3.client(
-        "s3",
-        region_name="eu-west-2",
-        aws_access_key_id="fake_access_key",
-        aws_secret_access_key="fake_secret_key",
-    )
+      type,
+      region_name=region,
+      aws_access_key_id="fake_access_key",
+      aws_secret_access_key="fake_secret_key",
+      )
+    return client
 
+def create_bucket(bucket_name):
+    client = create_client('s3')
     client.create_bucket(Bucket=bucket_name)
     return client
 
