@@ -159,8 +159,16 @@ class GenericErrors(unittest.TestCase):
 
 
 class SpecificFunctions(unittest.TestCase):
+
+    @parameterized.expand([
+                            (lookups, ["county", "county_name"],
+                             ["responder_county_lookup.json",
+                             "county_marine_lookup.json"], False),
+
+                            (bricks_blocks_lookups, ["region"],
+                             ["region_lookup.json"], True)])
     @mock_s3
-    def test_data_enrichment(self):
+    def test_data_enrichment(self, lookup_data, column_names, file_list, marine_check):
         with mock.patch.dict(lambda_method_function.os.environ,
                              method_environment_variables):
             with open("tests/fixtures/test_method_input.json", "r") as file:
@@ -170,40 +178,14 @@ class SpecificFunctions(unittest.TestCase):
             bucket_name = method_environment_variables["bucket_name"]
             client = test_generic_library.create_bucket(bucket_name)
 
-            file_list = ["responder_county_lookup.json",
-                         "county_marine_lookup.json"]
-
             test_generic_library.upload_files(client, bucket_name, file_list)
 
             output, test_anomalies = lambda_method_function.data_enrichment(
-                test_data, "true", "survey", "period",
-                "test_bucket", lookups, "responder_id"
+                test_data, marine_check, "survey", "period",
+                "test_bucket", lookup_data, "responder_id"
             )
-
-        assert "county" in output.columns.values
-        assert "county_name" in output.columns.values
-
-    @mock_s3
-    def test_data_enrichment_bricks_blocks(self):
-        with mock.patch.dict(lambda_method_function.os.environ,
-                             method_environment_variables):
-            with open("tests/fixtures/test_method_input.json", "r") as file:
-                test_data = file.read()
-            test_data = pd.DataFrame(json.loads(test_data))
-
-            bucket_name = method_environment_variables["bucket_name"]
-            client = test_generic_library.create_bucket(bucket_name)
-
-            file_list = ["region_lookup.json"]
-
-            test_generic_library.upload_files(client, bucket_name, file_list)
-
-            output, test_anomalies = lambda_method_function.data_enrichment(
-                test_data, "false", "survey", "period",
-                "test_bucket", bricks_blocks_lookups, "responder_id"
-            )
-
-        assert "region" in output.columns.values
+        for column_name in column_names:
+            assert column_name in output.columns.values
 
     def test_marine_mismatch_detector(self):
         with open("tests/fixtures/test_marine_mismatch_detector_input.json", "r") as file:
