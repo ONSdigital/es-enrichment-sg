@@ -287,7 +287,7 @@ class SpecificFunctions(unittest.TestCase):
                     wrangler_runtime_variables, test_generic_library.context_object
                 )
 
-        with open("tests/fixtures/test_wrangler_prepared_out.json", "r") as file_3:
+        with open("tests/fixtures/test_wrangler_prepared_output.json", "r") as file_3:
             test_data_prepared = file_3.read()
         prepared_data = pd.DataFrame(json.loads(test_data_prepared))
 
