@@ -8,35 +8,35 @@ The enrichment wrangler is the start of the process. It first picks up the sng d
 The method is generic. As well as the data, it receives information about lookups to use and survey specific parameters.
 example:
 ```
-"data":{ ...},
-"lookups":{
-  "0": {
-    "file_name": "responder_county_lookup_prod.json",
-    "columns_to_keep": [
-      "responder_id",
-      "county"
-    ],
-    "join_column": "responder_id",
-    "required": [
-      "county"
-    ]
-  },
-  "1": {
-    "file_name": "county_lookup_county.json",
-    "columns_to_keep": [
-      "county_name",
-      "region",
-      "county",
-      "marine"
-    ],
-    "join_column": "county",
-    "required": [
-      "region",
-      "marine"
-    ]
-  }
-},
-"parameters": {
+"RuntimeVariables": {
+    "data":{ ...},
+    "lookups":{
+      "0": {
+        "file_name": "responder_county_lookup_prod.json",
+        "columns_to_keep": [
+          "responder_id",
+          "county"
+        ],
+        "join_column": "responder_id",
+        "required": [
+          "county"
+        ]
+      },
+      "1": {
+        "file_name": "county_lookup_county.json",
+        "columns_to_keep": [
+          "county_name",
+          "region",
+          "county",
+          "marine"
+        ],
+        "join_column": "county",
+        "required": [
+          "region",
+          "marine"
+        ]
+      }
+    },
     "marine_mismatch_check": "true",
     "period_column": "period",
     "identifier_column": "responder_id"

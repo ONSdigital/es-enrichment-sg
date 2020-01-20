@@ -1,661 +1,318 @@
 import json
 import unittest
-import unittest.mock as mock
+from unittest import mock
 
-import boto3
 import pandas as pd
-from moto import mock_lambda, mock_s3, mock_sqs
+from es_aws_functions import test_generic_library
+from moto import mock_s3
+from pandas.util.testing import assert_frame_equal
+from parameterized import parameterized
 
 import enrichment_method as lambda_method_function
 import enrichment_wrangler as lambda_wrangler_function
 
+lookups = {
+    "0": {"file_name": "responder_county_lookup.json",
+          "columns_to_keep": ["responder_id", "county"],
+          "join_column": "responder_id",
+          "required": ["county"]
+          },
+    "1": {"file_name": "county_marine_lookup.json",
+          "columns_to_keep": ["county_name",
+                              "region", "county",
+                              "marine"],
+          "join_column": "county",
+          "required": ["region", "marine"]
+          }
+}
 
-class MockContext():
-    aws_request_id = 666
+bricks_blocks_lookups = {
+    "0": {"file_name": "region_lookup.json",
+          "columns_to_keep": ["region", "gor_code"],
+          "join_column": "gor_code",
+          "required": ["region"]
+          }
+}
+
+method_environment_variables = {
+    "bucket_name": "test_bucket"
+}
+
+wrangler_environment_variables = {
+    "sns_topic_arn": "fake_sns_arn",
+    "bucket_name": "test_bucket",
+    "checkpoint": "999",
+    "identifier_column": "responder_id",
+    "in_file_name": "test_wrangler_input.json",
+    "out_file_name": "test_wrangler_output.json",
+    "method_name": "enrichment_method",
+    "sqs_queue_url": "test_queue",
+    "sqs_message_group_id": "test_id",
+    "incoming_message_group": "test_group",
+    "period_column": "period",
+    "lookups": "insert_fake_here",
+    "marine_mismatch_check": "true"
+}
+
+method_runtime_variables = {
+    "RuntimeVariables": {
+        "data": None,
+        "lookups": lookups,
+        "marine_mismatch_check": "true",
+        "survey_column": "survey",
+        "period_column": "period",
+        "identifier_column": "responder_id"
+    }
+}
+
+wrangler_runtime_variables = {
+    "RuntimeVariables":
+        {
+            "checkpoint": "999",
+            "survey_column": "survey"
+        }
+}
 
 
-context_object = MockContext()
+class GenericErrors(unittest.TestCase):
 
+    @parameterized.expand([
+        (lambda_method_function, method_runtime_variables,
+         method_environment_variables, "tests/fixtures/test_method_input.json"),
+        (lambda_wrangler_function, wrangler_runtime_variables,
+         wrangler_environment_variables, None)
+    ])
+    def test_client_error(self, which_lambda, which_runtime_variables,
+                          which_environment_variables, which_data):
+        test_generic_library.client_error(which_lambda, which_runtime_variables,
+                                          which_environment_variables, which_data)
 
-class TestEnrichment(unittest.TestCase):
-    @mock_sqs
-    @mock_lambda
-    def test_catch_wrangler_exception(self):
-        # Method
-        sqs = boto3.resource("sqs", region_name="eu-west-2")
-        sqs.create_queue(QueueName="test_queue")
-        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {
-                "sns_topic_arn": "mike",
-                "bucket_name": "mike",
-                "checkpoint": "3",
-                "identifier_column": "responder_id",
-                "in_file_name": "test_data.json",
-                "out_file_name": "PhilipeDePhile",
-                "method_name": "enrichment_method",
-                "sqs_queue_url": sqs_queue_url,
-                "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test",
-                "period_column": "period",
-                "lookup_info": "Look up!!",
-                "marine_mismatch_check": "true"
-            },
-        ):
-            # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mocked:
-                mocked.side_effect = Exception("SQS Failure")
-                response = lambda_wrangler_function.lambda_handler(
-                    {
-                        "RuntimeVariables":
-                        {
-                            "checkpoint": 666,
-                            "survey_column": "survey"
-                        }
-                    }, context_object
-                )
-                assert "success" in response
-                assert response["success"] is False
+    @parameterized.expand([
+        (lambda_method_function, method_runtime_variables,
+         method_environment_variables, "enrichment_method.EnvironSchema"),
+        (lambda_wrangler_function, wrangler_runtime_variables,
+         wrangler_environment_variables, "enrichment_wrangler.EnvironSchema")
+    ])
+    def test_general_error(self, which_lambda, which_runtime_variables,
+                           which_environment_variables, chosen_exception):
+        test_generic_library.general_error(which_lambda, which_runtime_variables,
+                                           which_environment_variables, chosen_exception)
 
-    @mock_sqs
-    @mock_lambda
-    def test_catch_wrangler_keyerror_exception(self):
-        # Method
-        sqs = boto3.resource("sqs", region_name="eu-west-2")
-        sqs.create_queue(QueueName="test_queue")
-        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {
-                "sns_topic_arn": "mike",
-                "bucket_name": "mike",
-                "checkpoint": "3",
-                "identifier_column": "responder_id",
-                "in_file_name": "test_data.json",
-                "out_file_name": "PhilipeDePhile",
-                "method_name": "enrichment_method",
-                "sqs_queue_url": sqs_queue_url,
-                "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test",
-                "period_column": "period",
-                "lookup_info": "Look up!!",
-                "marine_mismatch_check": "true"
-            },
-        ):
-            # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mocked:
-                mocked.side_effect = KeyError("SQS Failure")
-                response = lambda_wrangler_function.lambda_handler(
-                    {
-                        "RuntimeVariables":
-                        {
-                            "checkpoint": 666,
-                            "survey_column": "survey"
-                        }
-                    }, context_object
-                )
-                assert "success" in response
-                assert response["success"] is False
-
-    @mock_sqs
-    @mock_lambda
-    def test_catch_wrangler_general_exception(self):
-        # Method
-        sqs = boto3.resource("sqs", region_name="eu-west-2")
-        sqs.create_queue(QueueName="test_queue")
-        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {
-                "sns_topic_arn": "mike",
-                "bucket_name": "mike",
-                "checkpoint": "3",
-                "identifier_column": "responder_id",
-                "in_file_name": "test_data.json",
-                "out_file_name": "PhilipeDePhile",
-                "method_name": "enrichment_method",
-                "sqs_queue_url": sqs_queue_url,
-                "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test",
-                "period_column": "period",
-                "lookup_info": "Look up!!",
-                "marine_mismatch_check": "true"
-            },
-        ):
-            # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mocked:
-                mocked.side_effect = Exception("SQS Failure")
-                response = lambda_wrangler_function.lambda_handler(
-                    {
-                        "RuntimeVariables":
-                        {
-                            "checkpoint": 666,
-                            "survey_column": "survey"
-                        }
-                    }, context_object
-                )
-                assert "success" in response
-                assert response["success"] is False
-
-    @mock_sqs
     @mock_s3
-    @mock_lambda
-    def test_wrangles(self):
-        sqs = boto3.resource("sqs", region_name="eu-west-2")
-        sqs.create_queue(QueueName="test_queue")
-        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-        client = boto3.client(
-                 "s3",
-                 region_name="eu-west-1",
-                 aws_access_key_id="fake_access_key",
-                 aws_secret_access_key="fake_secret_key",
-             )
+    @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
+                side_effect=test_generic_library.replacement_get_dataframe)
+    def test_incomplete_read_error(self, mock_s3_get):
 
-        client.create_bucket(Bucket="mike")
+        file_list = ["test_wrangler_input.json"]
 
-        with open("tests/fixtures/test_data.json", "r") as file:
-            testdata = file.read()
-        testdata = pd.DataFrame(json.loads(testdata))
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {
-                "sns_topic_arn": "mike",
-                "bucket_name": "mike",
-                "checkpoint": "3",
-                "identifier_column": "responder_id",
-                "in_file_name": "test_data.json",
-                "out_file_name": "PhilipeDePhile",
-                "method_name": "enrichment_method",
-                "sqs_queue_url": sqs_queue_url,
-                "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test",
-                "period_column": "period",
-                "lookup_info": "Look up!!",
-                "marine_mismatch_check": "true"
-            },
-        ):
-            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mock_s3:
-                mock_s3.return_value = testdata, 666
-                with mock.patch(
-                    "enrichment_wrangler.boto3.client"
-                ) as mock_client:
-                    mock_client_object = mock.Mock()
-                    mock_client.return_value = mock_client_object
-                    with open(
-                        "tests/fixtures/test_data_from_method.json", "r"
-                    ) as file:
-                        mock_client_object.invoke.return_value \
-                            .get.return_value.read \
-                            .return_value.decode.return_value = json.dumps({
-                             "data": file.read(), "success": True, "anomalies": []
-                            })
-                        response = lambda_wrangler_function.lambda_handler(
-                            {
-                                "RuntimeVariables":
-                                {
-                                    "checkpoint": 666,
-                                    "survey_column": "survey"
-                                }
-                            },
-                            context_object
-                        )
+        test_generic_library.incomplete_read_error(lambda_wrangler_function,
+                                                   wrangler_runtime_variables,
+                                                   wrangler_environment_variables,
+                                                   file_list,
+                                                   "enrichment_wrangler")
 
-                        assert "success" in response
-                        assert response["success"] is True
+    @parameterized.expand([
+        (lambda_method_function, method_environment_variables),
+        (lambda_wrangler_function, wrangler_environment_variables)
+    ])
+    def test_key_error(self, which_lambda, which_environment_variables):
+        test_generic_library.key_error(which_lambda,
+                                       which_environment_variables)
 
-    @mock_sqs
     @mock_s3
-    @mock_lambda
-    def test_wrangles_incompletereaderror(self):
-        sqs = boto3.resource("sqs", region_name="eu-west-2")
-        sqs.create_queue(QueueName="test_queue")
-        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-        client = boto3.client(
-                 "s3",
-                 region_name="eu-west-1",
-                 aws_access_key_id="fake_access_key",
-                 aws_secret_access_key="fake_secret_key",
-             )
+    @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
+                side_effect=test_generic_library.replacement_get_dataframe)
+    def test_method_error(self, mock_s3_get):
 
-        client.create_bucket(Bucket="mike")
+        file_list = ["test_wrangler_input.json"]
 
-        with open("tests/fixtures/test_data.json", "r") as file:
-            testdata = file.read()
-        testdata = pd.DataFrame(json.loads(testdata))
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {
-                "sns_topic_arn": "mike",
-                "bucket_name": "mike",
-                "checkpoint": "3",
-                "identifier_column": "responder_id",
-                "in_file_name": "test_data.json",
-                "out_file_name": "PhilipeDePhile",
-                "method_name": "enrichment_method",
-                "sqs_queue_url": sqs_queue_url,
-                "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test",
-                "period_column": "period",
-                "lookup_info": "Look up!!",
-                "marine_mismatch_check": "true"
-            },
-        ):
-            from botocore.response import StreamingBody
-            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mock_s3:
-                mock_s3.return_value = testdata, 666
-                with mock.patch(
-                    "enrichment_wrangler.boto3.client"
-                ) as mock_client:
-                    mock_client_object = mock.Mock()
-                    mock_client.return_value = mock_client_object
-                    with open(
-                        "tests/fixtures/test_data_from_method.json", "rb"
-                    ) as file:
-                        mock_client_object.invoke.return_value = {
-                            "Payload": StreamingBody(file, 1)
-                        }
-                        response = lambda_wrangler_function.lambda_handler(
-                            {
-                                "RuntimeVariables":
-                                {
-                                    "checkpoint": 666,
-                                    "survey_column": "survey"
-                                }
-                            },
-                            context_object
-                        )
-                        assert "success" in response
-                        assert response["success"] is False
-                        assert("Incomplete Lambda response" in response['error'])
+        test_generic_library.method_error(lambda_wrangler_function,
+                                          wrangler_runtime_variables,
+                                          wrangler_environment_variables,
+                                          file_list,
+                                          "enrichment_wrangler")
 
-    @mock_sqs
-    def test_wrangler_client_error(self):
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {
-                "sns_topic_arn": "mike",
-                "bucket_name": "mike",
-                "checkpoint": "3",
-                "identifier_column": "responder_id",
-                "in_file_name": "test_data.json",
-                "out_file_name": "PhilipeDePhile",
-                "method_name": "enrichment_method",
-                "sqs_queue_url": "aasdasdasd",
-                "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test",
-                "period_column": "period",
-                "lookup_info": "Look up!!",
-                "marine_mismatch_check": "true"
-            },
-        ):
-            response = lambda_wrangler_function.lambda_handler(
-                    {
-                        "RuntimeVariables":
-                        {
-                            "checkpoint": 666,
-                            "survey_column": "survey"
-                        }
-                    }, context_object
-                )
-            assert "success" in response
-            assert response["success"] is False
-            assert response["error"].__contains__("""AWS Error""")
+    @parameterized.expand([(lambda_method_function, ), (lambda_wrangler_function, )])
+    def test_value_error(self, which_lambda):
+        test_generic_library.value_error(
+            which_lambda)
 
-    @mock_sqs
-    @mock_lambda
-    def test_catch_method_exception(self):
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {
-                "bucket_name": "mike"
-            },
-        ):
-            # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
-                mocked.side_effect = Exception("SQS Failure")
-                response = lambda_method_function.lambda_handler(
-                    {
-                        "RuntimeVariables":
-                        {
-                            "checkpoint": 666,
-                            "survey_column": "survey"
-                        }
-                    }, context_object
-                )
-                assert "success" in response
-                assert response["success"] is False
 
-    @mock_sqs
-    @mock_lambda
-    def test_catch_method_keyerror_exception(self):
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {
-                "bucket_name": "mike"
-            },
-        ):
-            # using get_from_s3 to force exception early on.
-            with mock.patch("enrichment_wrangler.boto3.resource") as mocked:
-                mocked.side_effect = KeyError("SQS Failure")
-                response = lambda_method_function.lambda_handler(
-                    {
-                        "RuntimeVariables":
-                        {
-                            "checkpoint": 666,
-                            "survey_column": "survey"
-                        }
-                    }, context_object
-                )
-                assert "success" in response
-                assert response["success"] is False
+class SpecificFunctions(unittest.TestCase):
 
-    def test_missing_column_detector(self):
-        data = pd.DataFrame(
-            {"county": [1, None, 2], "responder_id": [666, 123, 8008]}
+    @parameterized.expand([
+        (lookups, ["county", "county_name"],
+         ["responder_county_lookup.json", "county_marine_lookup.json"], False),
+        (bricks_blocks_lookups, ["region"],
+         ["region_lookup.json"], True)])
+    @mock_s3
+    def test_data_enrichment(self, lookup_data, column_names, file_list, marine_check):
+        """
+        Runs data_enrichment function.
+        NOTE: This function calls do_merge and marine_mismatch_detector and doesn't
+        mock them. If this test fails check the tests for these funtions have passed
+        as they may be at fault.
+
+        :param lookup_data: Name of bucket to create - Type: dict
+        :param column_names: Name of bucket to create - Type: list
+        :param file_list: Name of bucket to create - Type: list
+        :param marine_check: Name of bucket to create - Type: boolean
+        :return Test Pass/Fail
+        """
+        with mock.patch.dict(lambda_method_function.os.environ,
+                             method_environment_variables):
+            with open("tests/fixtures/test_method_input.json", "r") as file:
+                test_data = file.read()
+            test_data = pd.DataFrame(json.loads(test_data))
+
+            bucket_name = method_environment_variables["bucket_name"]
+            client = test_generic_library.create_bucket(bucket_name)
+
+            test_generic_library.upload_files(client, bucket_name, file_list)
+
+            output, test_anomalies = lambda_method_function.data_enrichment(
+                test_data, marine_check, "survey", "period",
+                "test_bucket", lookup_data, "responder_id"
+            )
+        for column_name in column_names:
+            assert column_name in output.columns.values
+
+    @parameterized.expand([
+        ("responder_county_lookup.json", ["responder_id", "county"], "responder_id"),
+        ("region_lookup.json", ["region", "gor_code"], "gor_code")
+    ])
+    @mock_s3
+    def test_do_merge(self, file_name, column_names, join_column):
+        """
+        Runs do_merge function.
+        :param file_name: Name of bucket to create - Type: String
+        :param column_names: Name of bucket to create - Type: list
+        :param join_column: Name of bucket to create - Type: String
+        :return Test Pass/Fail
+        """
+        with open("tests/fixtures/test_method_input.json", "r") as file:
+            test_data = file.read()
+        test_data = pd.DataFrame(json.loads(test_data))
+        bucket_name = "test_bucket"
+        client = test_generic_library.create_bucket(bucket_name)
+
+        test_generic_library.upload_files(client, bucket_name, [file_name])
+
+        output = lambda_method_function.do_merge(
+            test_data, file_name, column_names, join_column, bucket_name
         )
-        test_output = lambda_method_function.missing_column_detector(
-            data, ["county"], "responder_id"
-        )
-        assert test_output.shape[0] == 1
+        for column_name in column_names:
+            assert column_name in output.columns.values
 
     def test_marine_mismatch_detector(self):
-        # one row in test data has been altered to trigger this.
-        with open("tests/fixtures/test_data.json", "r") as file:
-            testdata = file.read()
-        with open("tests/fixtures/county_marine_lookup.json", "r") as file:
-            countylookupdata = file.read()
-        with open("tests/fixtures/responder_county_lookup.json", "r") as file:
-            responder_lookup = file.read()
-        testdata_df = pd.DataFrame(json.loads(testdata))
-        countylookupdata_df = pd.DataFrame(json.loads(countylookupdata))
-        responder_lookup_df = pd.DataFrame(json.loads(responder_lookup))
-        testdata_df = pd.merge(
-            testdata_df, responder_lookup_df, on="responder_id", how="left"
+        """
+        Runs marine_mismatch_detector function.
+        :param None
+        :return Test Pass/Fail
+        """
+        with open("tests/fixtures/test_marine_mismatch_detector_input.json", "r") as file:
+            test_data = file.read()
+        test_data = pd.DataFrame(json.loads(test_data))
+
+        output = lambda_method_function.marine_mismatch_detector(
+            test_data, "survey", "marine", "period", "responder_id"
         )
-        testdata_df = pd.merge(
-            testdata_df, countylookupdata_df, on="county", how="left"
-        )
-        test_output = lambda_method_function.marine_mismatch_detector(
-            testdata_df,
-            "survey",
-            "marine",
-            "period",
-            "responder_id"
-        )
-        assert test_output.shape[0] == 1
+
+        assert output['issue'][0].__contains__("""should not produce""")
 
     @mock_s3
-    def test_data_enricher(self):
-        with mock.patch.dict(
-            lambda_method_function.os.environ,
-            {
-                "bucket_name": "mike"
-            },
-        ):
-            with open("tests/fixtures/test_data.json", "r") as file:
-                testdata = file.read()
+    def test_method_success(self):
+        """
+        Runs the method function.
+        :param None
+        :return Test Pass/Fail
+        """
+        with mock.patch.dict(lambda_method_function.os.environ,
+                             method_environment_variables):
+            with open("tests/fixtures/test_method_prepared_output.json", "r") as file_1:
+                file_data = file_1.read()
+            prepared_data = pd.DataFrame(json.loads(file_data))
 
-            testdata_df = pd.DataFrame(json.loads(testdata))
-            client = boto3.client(
-                "s3",
-                region_name="eu-west-1",
-                aws_access_key_id="fake_access_key",
-                aws_secret_access_key="fake_secret_key",
-            )
+            with open("tests/fixtures/test_method_input.json", "r") as file_2:
+                test_data = file_2.read()
+            method_runtime_variables["RuntimeVariables"]["data"] = test_data
 
-            client.create_bucket(Bucket="mike")
-            client.upload_file(
-                Filename="tests/fixtures/responder_county_lookup.json",
-                Bucket="mike",
-                Key="responderlookup",
-            )
-            client.upload_file(
-                Filename="tests/fixtures/county_marine_lookup.json",
-                Bucket="mike",
-                Key="countylookup",
-            )
+            bucket_name = method_environment_variables["bucket_name"]
+            client = test_generic_library.create_bucket(bucket_name)
 
-            test_output, test_anomalies = lambda_method_function.data_enrichment(
-                testdata_df,
-                "true",
-                "survey",
-                "period",
-                "mike",
-                {
-                 "0": {"file_name": "responderlookup",
-                       "columns_to_keep": ["responder_id", "county"],
-                       "join_column": "responder_id",
-                       "required": ["county"]},
-                 "1": {"file_name": "countylookup",
-                       "columns_to_keep": ["county_name",
-                                           "region", "county",
-                                           "marine"],
-                       "join_column": "county",
-                       "required": ["region", "marine"]}},
-                 "responder_id"
-            )
+            file_list = ["responder_county_lookup.json",
+                         "county_marine_lookup.json"]
 
-            assert "county" in test_output.columns.values
-            assert "county_name" in test_output.columns.values
+            test_generic_library.upload_files(client, bucket_name, file_list)
+
+            output = lambda_method_function.lambda_handler(
+                method_runtime_variables, test_generic_library.context_object)
+
+            produced_data = pd.DataFrame(json.loads(output["data"]))
+
+        assert output["success"]
+        assert_frame_equal(produced_data, prepared_data)
+
+    def test_missing_column_detector(self):
+        """
+        Runs missing_column_detector function.
+        :param None
+        :return Test Pass/Fail
+        """
+        data = pd.DataFrame({"county": [1, None, 2], "responder_id": [666, 123, 8008]})
+
+        output = lambda_method_function.missing_column_detector(
+            data, ["county"], "responder_id")
+
+        assert output['issue'][1].__contains__("""missing in lookup.""")
 
     @mock_s3
-    @mock_lambda
-    def test_method(self):
-        with mock.patch.dict(
-            lambda_method_function.os.environ,
-            {
-                "bucket_name": "MIKE"
-            },
-        ):
-            client = boto3.client(
-                "s3",
-                region_name="eu-west-1",
-                aws_access_key_id="fake_access_key",
-                aws_secret_access_key="fake_secret_key",
-            )
+    @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
+                side_effect=test_generic_library.replacement_get_dataframe)
+    @mock.patch('enrichment_wrangler.aws_functions.save_data',
+                side_effect=test_generic_library.replacement_save_data)
+    def test_wrangler_success(self, mock_s3_get, mock_s3_put):
+        """
+        Runs the wrangler function.
+        :param None
+        :return Test Pass/Fail
+        """
+        bucket_name = wrangler_environment_variables["bucket_name"]
+        client = test_generic_library.create_bucket(bucket_name)
 
-            client.create_bucket(Bucket="MIKE")
-            client.upload_file(
-                Filename="tests/fixtures/responder_county_lookup.json",
-                Bucket="MIKE",
-                Key="responderlookup",
-            )
-            client.upload_file(
-                Filename="tests/fixtures/county_marine_lookup.json",
-                Bucket="MIKE",
-                Key="countylookup",
-            )
+        file_list = ["test_wrangler_input.json"]
 
-            with open("tests/fixtures/test_data.json", "r") as file:
-                testdata = file.read()
+        test_generic_library.upload_files(client, bucket_name, file_list)
 
-            input = {
-                "data": testdata, "lookups": json.dumps({
-                    "0": {
-                        "file_name": "responderlookup",
-                        "columns_to_keep": ["responder_id", "county"],
-                        "join_column": "responder_id",
-                        "required": ["county"]
-                    }, "1": {
-                        "file_name": "countylookup",
-                        "columns_to_keep": ["county_name",
-                                            "region", "county",
-                                            "marine"],
-                        "join_column": "county",
-                        "required": ["region", "marine"]
-                        }
-                }), "marine_mismatch_check": "true",
-                    "survey_column": "survey",
-                    "period_column": "period",
-                    "identifier_column": "responder_id"
-            }
-            test_output = lambda_method_function.lambda_handler(input, context_object)
-            test_output = pd.read_json(test_output["data"])
-            assert "county" in test_output.columns.values
-            assert "county_name" in test_output.columns.values
+        with open("tests/fixtures/test_method_output.json", "r") as file_2:
+            test_data_out = file_2.read()
 
-    @mock_sqs
-    def test_marshmallow_raises_method_exception(self):
-        sqs = boto3.resource("sqs", region_name="eu-west-2")
-        sqs.create_queue(QueueName="test_queue")
-        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-        # Method
-        with mock.patch.dict(
-            lambda_method_function.os.environ, {"sqs_queue_url": sqs_queue_url}
-        ):
-            out = lambda_method_function.lambda_handler(
-                {
-                    "RuntimeVariables":
-                    {
-                        "checkpoint": 666,
-                        "survey_column": "survey"
-                    }
-                }, context_object
-            )
-            self.assertRaises(ValueError)
-            assert(out['error'].__contains__
-                   ("""Parameter validation error"""))
+        with mock.patch.dict(lambda_wrangler_function.os.environ,
+                             wrangler_environment_variables):
 
-    @mock_sqs
-    def test_marshmallow_raises_wrangler_exception(self):
-        sqs = boto3.resource("sqs", region_name="eu-west-2")
-        sqs.create_queue(QueueName="test_queue")
-        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-        # Method
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {"checkpoint": "1", "sqs_queue_url": sqs_queue_url},
-        ):
-            out = lambda_wrangler_function.lambda_handler(
-                {
-                    "RuntimeVariables":
-                    {
-                        "checkpoint": 666,
-                        "survey_column": "survey"
-                    }
-                }, context_object
-            )
-            self.assertRaises(ValueError)
-            assert(out['error'].__contains__
-                   ("""Parameter validation error"""))
+            with mock.patch("enrichment_wrangler.boto3.client") as mock_client:
+                mock_client_object = mock.Mock()
+                mock_client.return_value = mock_client_object
 
-    def test_for_bad_data(self):
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {"enrichment_column": "enrich", "county": "19"},
-        ):
-            response = lambda_method_function.lambda_handler(
-                "", context_object
-            )
-            assert response["error"].__contains__("""Parameter validation error""")
+                mock_client_object.invoke.return_value.get.return_value.read \
+                    .return_value.decode.return_value = json.dumps({
+                        "data": test_data_out,
+                        "success": True,
+                        "anomalies": []
+                    })
 
-    @mock_s3
-    def test_method_client_error(self):
-        with mock.patch.dict(
-            lambda_method_function.os.environ,
-            {
-                "bucket_name": "MIKE"
-            },
-        ):
-            with open("tests/fixtures/test_data.json", "r") as file:
-                testdata = file.read()
-
-            input = {
-                "data": testdata, "lookups": json.dumps({
-                    "0": {
-                        "required": "yup",
-                        "file_name": "mike",
-                        "columns_to_keep": "moo",
-                        "join_column": "fred"
-                    }
-                }), "marine_mismatch_check": "true",
-                    "survey_column": "survey",
-                    "period_column": "period",
-                    "identifier_column": "responder_id"
-            }
-            response = lambda_method_function.lambda_handler(
-                input, context_object
-            )
-
-            assert response["error"].__contains__("""AWS Error""")
-
-    def test_method_general_error(self):
-        with mock.patch.dict(
-            lambda_method_function.os.environ,
-            {
-                "bucket_name": "MIKE"
-            },
-        ):
-            with mock.patch("enrichment_method.EnvironSchema") as mock_schema:
-                mock_schema.side_effect = Exception("uh oh")
-                response = lambda_method_function.lambda_handler(
-                    None, context_object
+                output = lambda_wrangler_function.lambda_handler(
+                    wrangler_runtime_variables, test_generic_library.context_object
                 )
 
-                assert "General Error" in response["error"]
+        with open("tests/fixtures/test_wrangler_prepared_output.json", "r") as file_3:
+            test_data_prepared = file_3.read()
+        prepared_data = pd.DataFrame(json.loads(test_data_prepared))
 
-    @mock_sqs
-    @mock_s3
-    @mock_lambda
-    def test_method_error(self):
-        sqs = boto3.resource("sqs", region_name="eu-west-2")
-        sqs.create_queue(QueueName="test_queue")
-        sqs_queue_url = sqs.get_queue_by_name(QueueName="test_queue").url
-        client = boto3.client(
-                 "s3",
-                 region_name="eu-west-1",
-                 aws_access_key_id="fake_access_key",
-                 aws_secret_access_key="fake_secret_key",
-             )
+        with open("tests/fixtures/" + wrangler_environment_variables["out_file_name"],
+                  "r") as file_4:
+            test_data_produced = file_4.read()
+        produced_data = pd.DataFrame(json.loads(test_data_produced))
 
-        client.create_bucket(Bucket="mike")
-
-        with open("tests/fixtures/test_data.json", "r") as file:
-            testdata = file.read()
-        testdata = pd.DataFrame(json.loads(testdata))
-        with mock.patch.dict(
-            lambda_wrangler_function.os.environ,
-            {
-                "sns_topic_arn": "mike",
-                "bucket_name": "mike",
-                "checkpoint": "3",
-                "identifier_column": "responder_id",
-                "in_file_name": "test_data.json",
-                "out_file_name": "PhilipeDePhile",
-                "method_name": "enrichment_method",
-                "sqs_queue_url": sqs_queue_url,
-                "sqs_message_group_id": "testytest Mctestytestytesttest",
-                "incoming_message_group": "test",
-                "period_column": "period",
-                "lookup_info": "Look up!!",
-                "marine_mismatch_check": "true"
-            },
-        ):
-            with mock.patch("enrichment_wrangler.aws_functions.get_dataframe") as mock_s3:
-                mock_s3.return_value = testdata, 666
-                with mock.patch(
-                    "enrichment_wrangler.boto3.client"
-                ) as mock_client:
-                    mock_client_object = mock.Mock()
-                    mock_client.return_value = mock_client_object
-
-                    mock_client_object.invoke.return_value.get.return_value \
-                        .read.return_value.decode.return_value = \
-                        json.dumps({"error": "This is an error message",
-                                    "success": False})
-                    response = lambda_wrangler_function.lambda_handler(
-                        {
-                            "RuntimeVariables":
-                            {
-                                "checkpoint": 666,
-                                "survey_column": "survey"
-                            }
-                        },
-                        context_object
-                    )
-
-                    assert "success" in response
-                    assert response["success"] is False
-                    assert response["error"].__contains__(
-                        """This is an error message""")
+        assert output
+        assert_frame_equal(produced_data, prepared_data)

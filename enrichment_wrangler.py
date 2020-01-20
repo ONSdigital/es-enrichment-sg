@@ -21,7 +21,7 @@ class EnvironSchema(Schema):
     sqs_message_group_id = fields.Str(required=True)
     marine_mismatch_check = fields.Str(required=True)
     period_column = fields.Str(required=True)
-    lookup_info = fields.Str(required=True)
+    lookups = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -46,20 +46,27 @@ def lambda_handler(event, context):
             logger.error(f"Error validating environment params: {errors}")
             raise ValueError(f"Error validating environment params: {errors}")
 
-        logger.info("Validated params.")
+        logger.info("Validated parameters.")
 
-        # Env vars.
+        # Environment Variables.
         checkpoint = int(config["checkpoint"])
         bucket_name = config["bucket_name"]
+        identifier_column = config['identifier_column']
         in_file_name = config["in_file_name"]
         incoming_message_group = config["incoming_message_group"]
+        lookups = config['lookups']
+        marine_mismatch_check = config['marine_mismatch_check']
         method_name = config["method_name"]
         out_file_name = config["out_file_name"]
+        period_column = config['period_column']
         sns_topic_arn = config["sns_topic_arn"]
         sqs_message_group_id = config["sqs_message_group_id"]
         sqs_queue_url = config["sqs_queue_url"]
 
-        logger.info("Retrieved configuration variables")
+        # Runtime Variables.
+        survey_column = event['RuntimeVariables']["survey_column"]
+
+        logger.info("Retrieved configuration variables.")
 
         # Set up client.
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
@@ -67,24 +74,18 @@ def lambda_handler(event, context):
         data_df, receipt_handler = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
                                                                in_file_name,
                                                                incoming_message_group)
-        # Parameters.
-        marine_mismatch_check = config['marine_mismatch_check']
-        survey_column = event['RuntimeVariables']["survey_column"]
-        period_column = config['period_column']
-        identifier_column = config['identifier_column']
-
-        # Lookup info.
-        lookup_info = config['lookup_info']
 
         logger.info("Retrieved data from s3")
         data_json = data_df.to_json(orient="records")
         json_payload = {
-            "data": data_json,
-            "lookups": lookup_info,
-            "marine_mismatch_check": marine_mismatch_check,
-            "survey_column": survey_column,
-            "period_column": period_column,
-            "identifier_column": identifier_column,
+            "RuntimeVariables": {
+                "data": data_json,
+                "lookups": lookups,
+                "marine_mismatch_check": marine_mismatch_check,
+                "survey_column": survey_column,
+                "period_column": period_column,
+                "identifier_column": identifier_column
+            }
         }
         response = lambda_client.invoke(
             FunctionName=method_name,
@@ -114,7 +115,7 @@ def lambda_handler(event, context):
 
     # Raise value validation error.
     except ValueError as e:
-        error_message = "Parameter validation error in " + current_module \
+        error_message = "Parameter Validation Error in " + current_module \
                         + " |- " + str(e.args) + " | Request ID: " \
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)

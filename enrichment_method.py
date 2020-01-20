@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 
@@ -12,27 +11,6 @@ class EnvironSchema(Schema):
     bucket_name = fields.Str(required=True)
 
 
-def do_merge(input_data, join_data, columns_to_keep, join_column, bucket_name):
-    """
-    Generic merging function.
-
-    :param input_data: Input data from previous step - Dataframe
-    :param join_data: key of lookup file to pick up from s3 - String
-    :param columns_to_keep: List of columns from lookup to pick up - List(String)
-    :param join_column: Column to join lookup on with - String
-    :param bucket_name: Name of bucket to get file - String
-    :return outdata: Dataframe with lookup merged on.
-    """
-    # read and df the joindata
-    join_dataframe = aws_functions.read_dataframe_from_s3(bucket_name, join_data)
-
-    #  merge joindata onto main dataset using defined join column
-    outdata = pd.merge(input_data,
-                       join_dataframe[columns_to_keep],
-                       on=join_column, how="left")
-    return outdata
-
-
 def lambda_handler(event, context):
     """
     Performs enrichment process, joining 2 lookups onto data and detecting anomalies.
@@ -41,7 +19,7 @@ def lambda_handler(event, context):
     :return final_output: Dict with "success",
             "data" and "anomalies" or "success and "error".
     """
-    # set up logger
+    # Set up logger.
     current_module = "Enrichment - Method"
     error_message = ''
     log_message = ''
@@ -56,22 +34,20 @@ def lambda_handler(event, context):
             logger.error(f"Error validating environment params: {errors}")
             raise ValueError(f"Error validating environment params: {errors}")
 
-        logger.info("Validated params.")
+        logger.info("Validated parameters.")
 
+        # Environment Variables.
         bucket_name = config["bucket_name"]
 
-        logger.info("Retrieved configuration variable.")
+        # Runtime Variables.
+        data = event['RuntimeVariables']['data']
+        identifier_column = event['RuntimeVariables']["identifier_column"]
+        lookups = event['RuntimeVariables']['lookups']
+        marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
+        period_column = event['RuntimeVariables']["period_column"]
+        survey_column = event['RuntimeVariables']["survey_column"]
 
-        # Retrieve data and behaviour information
-        data = event['data']
-        lookups = json.loads(event['lookups'])
-        logger.info("Retrieved data and behaviour from wrangler.")
-
-        identifier_column = event["identifier_column"]
-        survey_column = event["survey_column"]
-        period_column = event["period_column"]
-        marine_mismatch_check = event["marine_mismatch_check"]
-        logger.info("Retrieved parameters from event.")
+        logger.info("Retrieved configuration variables.")
 
         input_data = pd.read_json(data, dtype=False)
 
@@ -94,25 +70,25 @@ def lambda_handler(event, context):
         logger.info("DF(s) converted back to JSON.")
 
         final_output = {"data": json_out, "anomalies": anomaly_out}
-    # raise value validation error
+    # Raise value validation error.
     except ValueError as e:
-        error_message = "Parameter validation error" + current_module \
+        error_message = "Parameter Validation Error in " + current_module \
                         + " |- " + str(e.args) + " | Request ID: " \
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # raise client based error
+    # Raise client based error.
     except ClientError as e:
         error_message = "AWS Error (" + str(e.response['Error']['Code']) \
                         + ") " + current_module + " |- " + str(e.args) \
                         + " | Request ID: " + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # raise key/index error
+    # Raise key/index error.
     except KeyError as e:
         error_message = "Key Error in " + current_module + " |- " + \
                         str(e.args) + " | Request ID: " \
                         + str(context.aws_request_id)
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # general exception
+    # General exception.
     except Exception as e:
         error_message = "General Error in " + current_module + \
                         " (" + str(type(e)) + ") |- " + str(e.args) + \
@@ -128,11 +104,8 @@ def lambda_handler(event, context):
     return final_output
 
 
-def marine_mismatch_detector(data,
-                             survey_column,
-                             check_column,
-                             period_column,
-                             identifier_column):
+def marine_mismatch_detector(data, survey_column, check_column,
+                             period_column, identifier_column):
     """
     Detects references that are producing marine but from a county that doesnt produce marine  # noqa: E501
     :param data: Input data after having been merged with responder_county_lookup - DataFrame
@@ -147,7 +120,7 @@ def marine_mismatch_detector(data,
         (data[survey_column] == "076")
         & (data[check_column] == "n")
         ]
-    bad_data["issue"] = "Reference should not produce marine data"
+    bad_data["issue"] = "Reference should not produce marine data."
     return bad_data[
         [
             identifier_column,
@@ -167,26 +140,21 @@ def missing_column_detector(data, columns_to_check, identifier_column):
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
     :return: data_without_columns: DF containing information about any reference without the column. - DataFrame
     """
-    # Create empty dataframe to hold output
+    # Create empty dataframe to hold output.
     data_without_columns = pd.DataFrame()
 
-    # For each of the passed in columns to check(1 or more)
-    # Create dataframe holding rows where column was null
+    # For each of the passed in columns to check(1 or more).
+    # Create dataframe holding rows where column was null.
     for column_to_check in columns_to_check:
         data_without_column = data[data[column_to_check].isnull()]
-        data_without_column["issue"] = str(column_to_check) + " missing in lookup"
+        data_without_column["issue"] = str(column_to_check) + " missing in lookup."
         data_without_columns = pd.concat([data_without_columns, data_without_column])
 
     return data_without_columns[[identifier_column, "issue"]]
 
 
-def data_enrichment(data_df,
-                    marine_mismatch_check,
-                    survey_column,
-                    period_column,
-                    bucket_name,
-                    lookups,
-                    identifier_column):
+def data_enrichment(data_df, marine_mismatch_check, survey_column, period_column,
+                    bucket_name, lookups, identifier_column):
     """
     Does the enrichment process by merging together several datasets. Checks for marine
     mismatch, unallocated county, and unallocated region are performed at this point.
@@ -214,14 +182,14 @@ def data_enrichment(data_df,
 
     anomalies = pd.DataFrame()
 
-    # missing column detection
+    # Missing column detection.
     for column in required_columns:
         anomalies = pd.concat([anomalies,
                                missing_column_detector(data_df,
                                                        column,
                                                        identifier_column)])
 
-    # Do Marine mismatch check here
+    # Do Marine mismatch check here.
     if marine_mismatch_check == "true":
         marine_anomalies = marine_mismatch_detector(
             data_df,
@@ -234,3 +202,24 @@ def data_enrichment(data_df,
         anomalies = pd.concat([marine_anomalies, anomalies])
 
     return data_df, anomalies
+
+
+def do_merge(input_data, join_data, columns_to_keep, join_column, bucket_name):
+    """
+    Generic merging function.
+
+    :param input_data: Input data from previous step - Dataframe
+    :param join_data: key of lookup file to pick up from s3 - String
+    :param columns_to_keep: List of columns from lookup to pick up - List(String)
+    :param join_column: Column to join lookup on with - String
+    :param bucket_name: Name of bucket to get file - String
+    :return outdata: Dataframe with lookup merged on.
+    """
+    # Read the join data as a df.
+    join_dataframe = aws_functions.read_dataframe_from_s3(bucket_name, join_data)
+
+    # Merge join data onto main dataset using defined join column.
+    outdata = pd.merge(input_data,
+                       join_dataframe[columns_to_keep],
+                       on=join_column, how="left")
+    return outdata
