@@ -173,6 +173,26 @@ class SpecificFunctions(unittest.TestCase):
         for column_name in column_names:
             assert column_name in output.columns.values
 
+    @parameterized.expand([
+        ("responder_county_lookup.json", ["responder_id", "county"], "responder_id"),
+        ("region_lookup.json", ["region", "gor_code"], "gor_code")
+    ])
+    @mock_s3
+    def test_do_merge(self, file_name, column_names, join_column):
+        with open("tests/fixtures/test_method_input.json", "r") as file:
+            test_data = file.read()
+        test_data = pd.DataFrame(json.loads(test_data))
+        bucket_name = "test_bucket"
+        client = test_generic_library.create_bucket(bucket_name)
+
+        test_generic_library.upload_files(client, bucket_name, [file_name])
+
+        output = lambda_method_function.do_merge(
+            test_data, file_name, column_names, join_column, bucket_name
+        )
+        for column_name in column_names:
+            assert column_name in output.columns.values
+
     def test_marine_mismatch_detector(self):
         with open("tests/fixtures/test_marine_mismatch_detector_input.json", "r") as file:
             test_data = file.read()
