@@ -3,13 +3,13 @@ import unittest
 from unittest import mock
 
 import pandas as pd
+from es_aws_functions import test_generic_library
 from moto import mock_s3
 from pandas.util.testing import assert_frame_equal
 from parameterized import parameterized
 
 import enrichment_method as lambda_method_function
 import enrichment_wrangler as lambda_wrangler_function
-from es_aws_functions import test_generic_library
 
 lookups = {
     "0": {"file_name": "responder_county_lookup.json",
@@ -23,6 +23,14 @@ lookups = {
                               "marine"],
           "join_column": "county",
           "required": ["region", "marine"]
+          }
+}
+
+bricks_blocks_lookups = {
+    "0": {"file_name": "region_lookup.json",
+          "columns_to_keep": ["region", "gor_code"],
+          "join_column": "gor_code",
+          "required": ["region"]
           }
 }
 
@@ -62,6 +70,18 @@ method_runtime_variables = {
         "identifier_column": "responder_id"
     }
 }
+
+method_runtime_variables_b = {
+    "RuntimeVariables": {
+        "data": None,
+        "lookups": bricks_blocks_lookups,
+        "marine_mismatch_check": "false",
+        "survey_column": "survey",
+        "period_column": "period",
+        "identifier_column": "responder_id"
+    }
+}
+
 
 wrangler_runtime_variables = {
     "RuntimeVariables":
@@ -114,7 +134,9 @@ class GenericErrors(unittest.TestCase):
         (lambda_wrangler_function, wrangler_environment_variables)
     ])
     def test_key_error(self, which_lambda, which_environment_variables):
-        test_generic_library.key_error(which_lambda, which_environment_variables, bad_runtime_variables)
+        test_generic_library.key_error(which_lambda,
+                                       which_environment_variables,
+                                       bad_runtime_variables)
 
     @mock_s3
     @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
@@ -138,7 +160,7 @@ class GenericErrors(unittest.TestCase):
 
 class SpecificFunctions(unittest.TestCase):
     @mock_s3
-    def test_data_enrichement(self):
+    def test_data_enrichment(self):
         with mock.patch.dict(lambda_method_function.os.environ,
                              method_environment_variables):
             with open("tests/fixtures/test_method_input.json", "r") as file:
@@ -160,6 +182,28 @@ class SpecificFunctions(unittest.TestCase):
 
         assert "county" in output.columns.values
         assert "county_name" in output.columns.values
+
+    @mock_s3
+    def test_data_enrichment_bricks_blocks(self):
+        with mock.patch.dict(lambda_method_function.os.environ,
+                             method_environment_variables):
+            with open("tests/fixtures/test_method_input.json", "r") as file:
+                test_data = file.read()
+            test_data = pd.DataFrame(json.loads(test_data))
+
+            bucket_name = method_environment_variables["bucket_name"]
+            client = test_generic_library.create_bucket(bucket_name)
+
+            file_list = ["region_lookup.json"]
+
+            test_generic_library.upload_files(client, bucket_name, file_list)
+
+            output, test_anomalies = lambda_method_function.data_enrichment(
+                test_data, "false", "survey", "period",
+                "test_bucket", bricks_blocks_lookups, "responder_id"
+            )
+
+        assert "region" in output.columns.values
 
     def test_marine_mismatch_detector(self):
         with open("tests/fixtures/test_marine_mismatch_detector_input.json", "r") as file:

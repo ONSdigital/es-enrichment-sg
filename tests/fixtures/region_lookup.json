@@ -1,0 +1,72 @@
+[
+  {
+    "gor_code": "AA",
+    "region": 1,
+    "region_name": "North East"
+  },
+  {
+    "gor_code": "BA",
+    "region": 3,
+    "region_name": "North West"
+  },
+  {
+    "gor_code": "BB",
+    "region": 3,
+    "region_name": "North West"
+  },
+  {
+    "gor_code": "CB",
+    "region": 3,
+    "region_name": "North West"
+  },
+  {
+    "gor_code": "DC",
+    "region": 2,
+    "region_name": "Yorks & Humberside"
+  },
+  {
+    "gor_code": "ED",
+    "region": 6,
+    "region_name": "East Midlands"
+  },
+  {
+    "gor_code": "FE",
+    "region": 5,
+    "region_name": "West Midlands"
+  },
+  {
+    "gor_code": "GF",
+    "region": 7,
+    "region_name": "Eastern"
+  },
+  {
+    "gor_code": "GG",
+    "region": 7,
+    "region_name": "Eastern"
+  },
+  {
+    "gor_code": "HH",
+    "region": 9,
+    "region_name": "South East"
+  },
+  {
+    "gor_code": "JG",
+    "region": 9,
+    "region_name": "South East"
+  },
+  {
+    "gor_code": "KJ",
+    "region": 10,
+    "region_name": "South West"
+  },
+  {
+    "gor_code": "WW",
+    "region": 11,
+    "region_name": "Wales"
+  },
+  {
+    "gor_code": "XX",
+    "region": 12,
+    "region_name": "Scotland"
+  }
+]
