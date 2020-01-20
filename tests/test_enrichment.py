@@ -71,18 +71,6 @@ method_runtime_variables = {
     }
 }
 
-method_runtime_variables_b = {
-    "RuntimeVariables": {
-        "data": None,
-        "lookups": bricks_blocks_lookups,
-        "marine_mismatch_check": "false",
-        "survey_column": "survey",
-        "period_column": "period",
-        "identifier_column": "responder_id"
-    }
-}
-
-
 wrangler_runtime_variables = {
     "RuntimeVariables":
         {
@@ -161,12 +149,10 @@ class GenericErrors(unittest.TestCase):
 class SpecificFunctions(unittest.TestCase):
 
     @parameterized.expand([
-                            (lookups, ["county", "county_name"],
-                             ["responder_county_lookup.json",
-                             "county_marine_lookup.json"], False),
-
-                            (bricks_blocks_lookups, ["region"],
-                             ["region_lookup.json"], True)])
+        (lookups, ["county", "county_name"],
+         ["responder_county_lookup.json", "county_marine_lookup.json"], False),
+        (bricks_blocks_lookups, ["region"],
+         ["region_lookup.json"], True)])
     @mock_s3
     def test_data_enrichment(self, lookup_data, column_names, file_list, marine_check):
         with mock.patch.dict(lambda_method_function.os.environ,
