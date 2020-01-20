@@ -34,8 +34,6 @@ bricks_blocks_lookups = {
           }
 }
 
-bad_environment_variables = {"checkpoint": "test"}
-
 method_environment_variables = {
     "bucket_name": "test_bucket"
 }
@@ -54,10 +52,6 @@ wrangler_environment_variables = {
     "period_column": "period",
     "lookups": "insert_fake_here",
     "marine_mismatch_check": "true"
-}
-
-bad_runtime_variables = {
-    "RuntimeVariables": {}
 }
 
 method_runtime_variables = {
@@ -123,8 +117,7 @@ class GenericErrors(unittest.TestCase):
     ])
     def test_key_error(self, which_lambda, which_environment_variables):
         test_generic_library.key_error(which_lambda,
-                                       which_environment_variables,
-                                       bad_runtime_variables)
+                                       which_environment_variables)
 
     @mock_s3
     @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
@@ -142,8 +135,7 @@ class GenericErrors(unittest.TestCase):
     @parameterized.expand([(lambda_method_function, ), (lambda_wrangler_function, )])
     def test_value_error(self, which_lambda):
         test_generic_library.value_error(
-            which_lambda, bad_runtime_variables, bad_environment_variables
-        )
+            which_lambda)
 
 
 class SpecificFunctions(unittest.TestCase):
