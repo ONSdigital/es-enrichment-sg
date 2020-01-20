@@ -147,6 +147,18 @@ class SpecificFunctions(unittest.TestCase):
          ["region_lookup.json"], True)])
     @mock_s3
     def test_data_enrichment(self, lookup_data, column_names, file_list, marine_check):
+        """
+            Runs data_enrichment function.
+            NOTE: This function calls do_merge and marine_mismatch_detector and doesn't
+            mock them. If this test fails check the tests for these funtions have passed
+            as they may be at fault.
+
+            :param lookup_data: Name of bucket to create - Type: dict
+            :param column_names: Name of bucket to create - Type: list
+            :param file_list: Name of bucket to create - Type: list
+            :param marine_check: Name of bucket to create - Type: boolean
+            :return Test Pass/Fail
+        """
         with mock.patch.dict(lambda_method_function.os.environ,
                              method_environment_variables):
             with open("tests/fixtures/test_method_input.json", "r") as file:
@@ -171,6 +183,13 @@ class SpecificFunctions(unittest.TestCase):
     ])
     @mock_s3
     def test_do_merge(self, file_name, column_names, join_column):
+        """
+            Runs do_merge function.
+            :param file_name: Name of bucket to create - Type: String
+            :param column_names: Name of bucket to create - Type: list
+            :param join_column: Name of bucket to create - Type: String
+            :return Test Pass/Fail
+        """
         with open("tests/fixtures/test_method_input.json", "r") as file:
             test_data = file.read()
         test_data = pd.DataFrame(json.loads(test_data))
@@ -186,6 +205,11 @@ class SpecificFunctions(unittest.TestCase):
             assert column_name in output.columns.values
 
     def test_marine_mismatch_detector(self):
+        """
+            Runs marine_mismatch_detector function.
+            :param None
+            :return Test Pass/Fail
+        """
         with open("tests/fixtures/test_marine_mismatch_detector_input.json", "r") as file:
             test_data = file.read()
         test_data = pd.DataFrame(json.loads(test_data))
@@ -198,6 +222,11 @@ class SpecificFunctions(unittest.TestCase):
 
     @mock_s3
     def test_method_success(self):
+        """
+            Runs the method function.
+            :param None
+            :return Test Pass/Fail
+        """
         with mock.patch.dict(lambda_method_function.os.environ,
                              method_environment_variables):
             with open("tests/fixtures/test_method_prepared_output.json", "r") as file_1:
@@ -225,6 +254,11 @@ class SpecificFunctions(unittest.TestCase):
         assert_frame_equal(produced_data, prepared_data)
 
     def test_missing_column_detector(self):
+        """
+            Runs missing_column_detector function.
+            :param None
+            :return Test Pass/Fail
+        """
         data = pd.DataFrame({"county": [1, None, 2], "responder_id": [666, 123, 8008]})
 
         output = lambda_method_function.missing_column_detector(
@@ -238,7 +272,11 @@ class SpecificFunctions(unittest.TestCase):
     @mock.patch('enrichment_wrangler.aws_functions.save_data',
                 side_effect=test_generic_library.replacement_save_data)
     def test_wrangler_success(self, mock_s3_get, mock_s3_put):
-
+        """
+            Runs the wrangler function.
+            :param None
+            :return Test Pass/Fail
+        """
         bucket_name = wrangler_environment_variables["bucket_name"]
         client = test_generic_library.create_bucket(bucket_name)
 
