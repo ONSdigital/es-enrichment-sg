@@ -63,8 +63,8 @@ def lambda_handler(event, context):
         sqs_queue_url = config["sqs_queue_url"]
 
         # Runtime Variables.
-        survey_column = event['RuntimeVariables']["survey_column"]
         lookups = event['RuntimeVariables']['lookups']
+        survey_column = event['RuntimeVariables']["survey_column"]
 
         logger.info("Retrieved configuration variables.")
 
