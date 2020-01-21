@@ -68,6 +68,7 @@ method_runtime_variables = {
 wrangler_runtime_variables = {
     "RuntimeVariables":
         {
+            "lookups": lookups,
             "checkpoint": "999",
             "survey_column": "survey"
         }
