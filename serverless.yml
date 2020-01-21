@@ -51,7 +51,6 @@ functions:
       sqs_queue_url: https://sqs.eu-west-2.amazonaws.com/${self:custom.accountId}/BMI_Results.fifo
       marine_mismatch_check: true
       period_column: period
-      lookups: '{"0":{"file_name":"Sandy_Merged_lookup.json","columns_to_keep":["responder_id","county"],"join_column":"responder_id","required":["county"]},"1":{"file_name":"county_lookup.json","columns_to_keep":["county_name","region","county","marine"],"join_column":"county","required":["region","marine"]}}'
 
   deploy-enrichment-method:
     name: es-enrichment-method

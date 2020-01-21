@@ -54,7 +54,6 @@ def lambda_handler(event, context):
         identifier_column = config['identifier_column']
         in_file_name = config["in_file_name"]
         incoming_message_group = config["incoming_message_group"]
-        lookups = config['lookups']
         marine_mismatch_check = config['marine_mismatch_check']
         method_name = config["method_name"]
         out_file_name = config["out_file_name"]
@@ -65,6 +64,7 @@ def lambda_handler(event, context):
 
         # Runtime Variables.
         survey_column = event['RuntimeVariables']["survey_column"]
+        lookups = event['RuntimeVariables']['lookups']
 
         logger.info("Retrieved configuration variables.")
 
