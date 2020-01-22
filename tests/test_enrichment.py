@@ -321,10 +321,10 @@ def test_wrangler_success(mock_s3_get, mock_s3_put):
 
             mock_client_object.invoke.return_value.get.return_value.read \
                 .return_value.decode.return_value = json.dumps({
-                "data": test_data_out,
-                "success": True,
-                "anomalies": []
-            })
+                 "data": test_data_out,
+                 "success": True,
+                 "anomalies": []
+                })
 
             output = lambda_wrangler_function.lambda_handler(
                 wrangler_runtime_variables, test_generic_library.context_object
