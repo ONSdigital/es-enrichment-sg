@@ -127,8 +127,7 @@ def test_incomplete_read_error(mock_s3_get):
         (lambda_wrangler_function, wrangler_environment_variables)
     ])
 def test_key_error(which_lambda, which_environment_variables):
-    test_generic_library.key_error(which_lambda,
-                                   which_environment_variables)
+    test_generic_library.key_error(which_lambda, which_environment_variables)
 
 
 @mock_s3
@@ -148,8 +147,7 @@ def test_method_error(mock_s3_get):
     "which_lambda",
     [lambda_method_function, lambda_wrangler_function])
 def test_value_error(which_lambda):
-    test_generic_library.value_error(
-        which_lambda)
+    test_generic_library.value_error(which_lambda)
 
 
 ##########################################################################################
