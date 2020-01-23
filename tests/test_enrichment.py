@@ -122,11 +122,14 @@ def test_incomplete_read_error(mock_s3_get):
 
 
 def test_wrangler_key_error():
-    test_generic_library.wrangler_key_error(lambda_wrangler_function, wrangler_environment_variables)
+    test_generic_library.wrangler_key_error(lambda_wrangler_function,
+                                            wrangler_environment_variables)
 
 
 def test_method_key_error():
-    test_generic_library.method_key_error(lambda_method_function, method_environment_variables)
+    test_generic_library.method_key_error(lambda_method_function,
+                                          method_environment_variables)
+
 
 @mock_s3
 @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
@@ -135,15 +138,15 @@ def test_method_error(mock_s3_get):
     file_list = ["test_wrangler_input.json"]
 
     test_generic_library.wrangler_method_error(lambda_wrangler_function,
-                                      wrangler_runtime_variables,
-                                      wrangler_environment_variables,
-                                      file_list,
-                                      "enrichment_wrangler")
-
+                                               wrangler_runtime_variables,
+                                               wrangler_environment_variables,
+                                               file_list,
+                                               "enrichment_wrangler")
 
 
 def test_wrangler_value_error():
     test_generic_library.wrangler_value_error(lambda_wrangler_function)
+
 
 def test_method_value_error():
     test_generic_library.method_value_error(lambda_method_function)
