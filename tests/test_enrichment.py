@@ -69,7 +69,8 @@ wrangler_runtime_variables = {
         {
             "lookups": lookups,
             "checkpoint": "999",
-            "survey_column": "survey"
+            "survey_column": "survey",
+            "run_id": "bob"
         }
 }
 
@@ -79,32 +80,32 @@ wrangler_runtime_variables = {
 ##########################################################################################
 
 
-@pytest.mark.parametrize(
-    "which_lambda,which_runtime_variables,which_environment_variables,which_data",
-    [
-        (lambda_method_function, method_runtime_variables,
-         method_environment_variables, "tests/fixtures/test_method_input.json"),
-        (lambda_wrangler_function, wrangler_runtime_variables,
-         wrangler_environment_variables, None)
-    ])
-def test_client_error(which_lambda, which_runtime_variables,
-                      which_environment_variables, which_data):
-    test_generic_library.client_error(which_lambda, which_runtime_variables,
-                                      which_environment_variables, which_data)
+def test_wrangler_client_error():
+    test_generic_library.wrangler_client_error(lambda_wrangler_function,
+                                               wrangler_runtime_variables,
+                                               wrangler_environment_variables,
+                                               None)
 
 
-@pytest.mark.parametrize(
-    "which_lambda,which_runtime_variables,which_environment_variables,mockable_function",
-    [
-        (lambda_method_function, method_runtime_variables,
-         method_environment_variables, "enrichment_method.EnvironSchema"),
-        (lambda_wrangler_function, wrangler_runtime_variables,
-         wrangler_environment_variables, "enrichment_wrangler.EnvironSchema")
-    ])
-def test_general_error(which_lambda, which_runtime_variables,
-                       which_environment_variables, mockable_function):
-    test_generic_library.general_error(which_lambda, which_runtime_variables,
-                                       which_environment_variables, mockable_function)
+def test_method_client_error():
+    test_generic_library.method_client_error(lambda_method_function,
+                                             method_runtime_variables,
+                                             method_environment_variables,
+                                             "tests/fixtures/test_method_input.json")
+
+
+def test_wrangler_general_error():
+    test_generic_library.wrangler_general_error(lambda_wrangler_function,
+                                                wrangler_runtime_variables,
+                                                wrangler_environment_variables,
+                                                "enrichment_wrangler.EnvironSchema")
+
+
+def test_method_general_error():
+    test_generic_library.method_general_error(lambda_method_function,
+                                              method_runtime_variables,
+                                              method_environment_variables,
+                                              "enrichment_method.EnvironSchema")
 
 
 @mock_s3
@@ -120,15 +121,12 @@ def test_incomplete_read_error(mock_s3_get):
                                                "enrichment_wrangler")
 
 
-@pytest.mark.parametrize(
-    "which_lambda,which_environment_variables",
-    [
-        (lambda_method_function, method_environment_variables),
-        (lambda_wrangler_function, wrangler_environment_variables)
-    ])
-def test_key_error(which_lambda, which_environment_variables):
-    test_generic_library.key_error(which_lambda, which_environment_variables)
+def test_wrangler_key_error():
+    test_generic_library.wrangler_key_error(lambda_wrangler_function, wrangler_environment_variables)
 
+
+def test_method_key_error():
+    test_generic_library.method_key_error(lambda_method_function, method_environment_variables)
 
 @mock_s3
 @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
@@ -136,18 +134,19 @@ def test_key_error(which_lambda, which_environment_variables):
 def test_method_error(mock_s3_get):
     file_list = ["test_wrangler_input.json"]
 
-    test_generic_library.method_error(lambda_wrangler_function,
+    test_generic_library.wrangler_method_error(lambda_wrangler_function,
                                       wrangler_runtime_variables,
                                       wrangler_environment_variables,
                                       file_list,
                                       "enrichment_wrangler")
 
 
-@pytest.mark.parametrize(
-    "which_lambda",
-    [lambda_method_function, lambda_wrangler_function])
-def test_value_error(which_lambda):
-    test_generic_library.value_error(which_lambda)
+
+def test_wrangler_value_error():
+    test_generic_library.wrangler_value_error(lambda_wrangler_function)
+
+def test_method_value_error():
+    test_generic_library.method_value_error(lambda_method_function)
 
 
 ##########################################################################################
