@@ -79,33 +79,42 @@ wrangler_runtime_variables = {
 #                                     Generic                                            #
 ##########################################################################################
 
-
-def test_wrangler_client_error():
-    test_generic_library.wrangler_client_error(lambda_wrangler_function,
-                                               wrangler_runtime_variables,
-                                               wrangler_environment_variables,
-                                               None)
-
-
-def test_method_client_error():
-    test_generic_library.method_client_error(lambda_method_function,
-                                             method_runtime_variables,
-                                             method_environment_variables,
-                                             "tests/fixtures/test_method_input.json")
-
-
-def test_wrangler_general_error():
-    test_generic_library.wrangler_general_error(lambda_wrangler_function,
-                                                wrangler_runtime_variables,
-                                                wrangler_environment_variables,
-                                                "enrichment_wrangler.EnvironSchema")
+@pytest.mark.parametrize(
+    "which_lambda,which_runtime_variables,which_environment_variables,"
+    "which_data,expected_message,assertion",
+    [
+        (lambda_method_function, method_runtime_variables,
+         method_environment_variables, "tests/fixtures/test_method_input.json",
+         "AWS Error", test_generic_library.method_assert),
+        (lambda_wrangler_function, wrangler_runtime_variables,
+         wrangler_environment_variables, None,
+         "AWS Error", test_generic_library.wrangler_assert)
+    ])
+def test_client_error(which_lambda, which_runtime_variables,
+                      which_environment_variables, which_data,
+                      expected_message, assertion):
+    test_generic_library.client_error(which_lambda, which_runtime_variables,
+                                      which_environment_variables, which_data,
+                                      expected_message, assertion)
 
 
-def test_method_general_error():
-    test_generic_library.method_general_error(lambda_method_function,
-                                              method_runtime_variables,
-                                              method_environment_variables,
-                                              "enrichment_method.EnvironSchema")
+@pytest.mark.parametrize(
+    "which_lambda,which_runtime_variables,which_environment_variables,mockable_function,"
+    "expected_message,assertion",
+    [
+        (lambda_method_function, method_runtime_variables,
+         method_environment_variables, "enrichment_method.EnvironSchema",
+         "General Error", test_generic_library.method_assert),
+        (lambda_wrangler_function, wrangler_runtime_variables,
+         wrangler_environment_variables, "enrichment_wrangler.EnvironSchema",
+         "General Error", test_generic_library.wrangler_assert)
+    ])
+def test_general_error(which_lambda, which_runtime_variables,
+                       which_environment_variables, mockable_function,
+                       expected_message, assertion):
+    test_generic_library.general_error(which_lambda, which_runtime_variables,
+                                       which_environment_variables, mockable_function,
+                                       expected_message, assertion)
 
 
 @mock_s3
@@ -121,14 +130,19 @@ def test_incomplete_read_error(mock_s3_get):
                                                "enrichment_wrangler")
 
 
-def test_wrangler_key_error():
-    test_generic_library.wrangler_key_error(lambda_wrangler_function,
-                                            wrangler_environment_variables)
-
-
-def test_method_key_error():
-    test_generic_library.method_key_error(lambda_method_function,
-                                          method_environment_variables)
+@pytest.mark.parametrize(
+    "which_lambda,expected_message,assertion,which_environment_variables",
+    [
+        (lambda_method_function, method_environment_variables,
+         "Key Error", test_generic_library.method_assert),
+        (lambda_wrangler_function, wrangler_environment_variables,
+         "Key Error", test_generic_library.wrangler_assert)
+    ])
+def test_key_error(which_lambda, expected_message,
+                   assertion, which_environment_variables):
+    test_generic_library.key_error(which_lambda,
+                                   expected_message, assertion,
+                                   which_environment_variables)
 
 
 @mock_s3
@@ -144,17 +158,22 @@ def test_method_error(mock_s3_get):
                                                "enrichment_wrangler")
 
 
-def test_wrangler_value_error():
-    test_generic_library.wrangler_value_error(lambda_wrangler_function)
-
-
-def test_method_value_error():
-    test_generic_library.method_value_error(lambda_method_function)
-
+@pytest.mark.parametrize(
+    "which_lambda,expected_message,assertion",
+    [(lambda_method_function,
+      "Parameter Validation Error",
+      test_generic_library.method_assert),
+     (lambda_wrangler_function,
+      "Error validating environment params",
+      test_generic_library.wrangler_assert)])
+def test_value_error(which_lambda, expected_message, assertion):
+    test_generic_library.value_error(
+        which_lambda, expected_message, assertion)
 
 ##########################################################################################
 #                                     Specific                                           #
 ##########################################################################################
+
 
 @pytest.mark.parametrize(
     "lookup_data,column_names,file_list,marine_check",

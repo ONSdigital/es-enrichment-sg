@@ -21,7 +21,6 @@ class EnvironSchema(Schema):
     sqs_message_group_id = fields.Str(required=True)
     marine_mismatch_check = fields.Str(required=True)
     period_column = fields.Str(required=True)
-    lookups = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
