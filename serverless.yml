@@ -1,5 +1,5 @@
 ---
-service: es-enrichment-sg
+service: es-enrichment-sg-lu4987
 provider:
   name: aws
   deploymentBucket:
