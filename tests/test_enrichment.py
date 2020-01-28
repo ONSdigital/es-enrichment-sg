@@ -70,7 +70,8 @@ wrangler_runtime_variables = {
             "lookups": lookups,
             "checkpoint": "999",
             "survey_column": "survey",
-            "run_id": "bob"
+            "run_id": "bob",
+            "queue_url": "Earl"
         }
 }
 
