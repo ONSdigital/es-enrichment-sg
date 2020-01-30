@@ -42,7 +42,6 @@ wrangler_environment_variables = {
     "bucket_name": "test_bucket",
     "checkpoint": "999",
     "identifier_column": "responder_id",
-    "in_file_name": "test_wrangler_input.json",
     "out_file_name": "test_wrangler_output.json",
     "method_name": "enrichment_method",
     "sqs_queue_url": "test_queue",
@@ -71,7 +70,8 @@ wrangler_runtime_variables = {
             "checkpoint": "999",
             "survey_column": "survey",
             "run_id": "bob",
-            "queue_url": "Earl"
+            "queue_url": "Earl",
+            "in_file_name": "test_wrangler_input.json"
         }
 }
 

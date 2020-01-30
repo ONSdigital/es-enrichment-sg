@@ -12,7 +12,6 @@ class EnvironSchema(Schema):
     checkpoint = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
-    in_file_name = fields.Str(required=True)
     incoming_message_group = fields.Str(required=True)
     method_name = fields.Str(required=True)
     out_file_name = fields.Str(required=True)
@@ -57,7 +56,6 @@ def lambda_handler(event, context):
         checkpoint = int(config["checkpoint"])
         bucket_name = config["bucket_name"]
         identifier_column = config['identifier_column']
-        in_file_name = config["in_file_name"]
         incoming_message_group = config["incoming_message_group"]
         marine_mismatch_check = config['marine_mismatch_check']
         method_name = config["method_name"]
@@ -70,6 +68,7 @@ def lambda_handler(event, context):
         lookups = event['RuntimeVariables']['lookups']
         survey_column = event['RuntimeVariables']["survey_column"]
         sqs_queue_url = event['RuntimeVariables']["queue_url"]
+        in_file_name = event['RuntimeVariables']["in_file_name"]
 
         logger.info("Retrieved configuration variables.")
 
