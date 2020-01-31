@@ -71,7 +71,8 @@ wrangler_runtime_variables = {
             "survey_column": "survey",
             "run_id": "bob",
             "queue_url": "Earl",
-            "in_file_name": "test_wrangler_input.json"
+            "in_file_name": "test_wrangler_input.json",
+            "marine_mismatch_check": "true"
         }
 }
 
