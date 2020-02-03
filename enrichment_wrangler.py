@@ -17,7 +17,6 @@ class EnvironSchema(Schema):
     out_file_name = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
     sqs_message_group_id = fields.Str(required=True)
-    marine_mismatch_check = fields.Str(required=True)
     period_column = fields.Str(required=True)
 
 
@@ -67,7 +66,7 @@ def lambda_handler(event, context):
         lookups = event['RuntimeVariables']['lookups']
         survey_column = event['RuntimeVariables']["survey_column"]
         sqs_queue_url = event['RuntimeVariables']["queue_url"]
-        in_file_name = event['RuntimeVariables']["in_file_name"]
+        in_file_name = event['RuntimeVariables']["in_file_name"]['enrichment']
         marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
 
         logger.info("Retrieved configuration variables.")
