@@ -66,7 +66,7 @@ def lambda_handler(event, context):
         lookups = event['RuntimeVariables']['lookups']
         survey_column = event['RuntimeVariables']["survey_column"]
         sqs_queue_url = event['RuntimeVariables']["queue_url"]
-        in_file_name = event['RuntimeVariables']["in_file_name"]
+        in_file_name = event['RuntimeVariables']["in_file_name"]['enrichment']
         marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
 
         logger.info("Retrieved configuration variables.")
