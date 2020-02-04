@@ -76,7 +76,8 @@ def lambda_handler(event, context):
         sqs = boto3.client("sqs", region_name='eu-west-2')
         data_df, receipt_handler = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
                                                                in_file_name,
-                                                               incoming_message_group)
+                                                               incoming_message_group,
+                                                               run_id)
 
         logger.info("Retrieved data from s3")
         data_json = data_df.to_json(orient="records")
@@ -105,7 +106,7 @@ def lambda_handler(event, context):
         anomalies = json_response["anomalies"]
 
         aws_functions.save_data(bucket_name, out_file_name, json_response["data"],
-                                sqs_queue_url, sqs_message_group_id)
+                                sqs_queue_url, sqs_message_group_id, run_id)
 
         logger.info("Successfully sent data to s3.")
 
