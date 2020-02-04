@@ -76,8 +76,7 @@ def lambda_handler(event, context):
         sqs = boto3.client("sqs", region_name='eu-west-2')
         data_df, receipt_handler = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
                                                                in_file_name,
-                                                               incoming_message_group,
-                                                               run_id)
+                                                               incoming_message_group)
 
         logger.info("Retrieved data from s3")
         data_json = data_df.to_json(orient="records")
