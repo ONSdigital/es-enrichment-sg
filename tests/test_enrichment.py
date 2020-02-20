@@ -11,12 +11,12 @@ import enrichment_method as lambda_method_function
 import enrichment_wrangler as lambda_wrangler_function
 
 lookups = {
-    "0": {"file_name": "responder_county_lookup.json",
+    "0": {"file_name": "responder_county_lookup",
           "columns_to_keep": ["responder_id", "county"],
           "join_column": "responder_id",
           "required": ["county"]
           },
-    "1": {"file_name": "county_marine_lookup.json",
+    "1": {"file_name": "county_marine_lookup",
           "columns_to_keep": ["county_name",
                               "region", "county",
                               "marine"],
@@ -26,7 +26,7 @@ lookups = {
 }
 
 bricks_blocks_lookups = {
-    "0": {"file_name": "region_lookup.json",
+    "0": {"file_name": "region_lookup",
           "columns_to_keep": ["region", "gor_code"],
           "join_column": "gor_code",
           "required": ["region"]
@@ -42,14 +42,7 @@ wrangler_environment_variables = {
     "bucket_name": "test_bucket",
     "checkpoint": "999",
     "identifier_column": "responder_id",
-    "out_file_name": "test_wrangler_output.json",
-    "method_name": "enrichment_method",
-    "sqs_queue_url": "test_queue",
-    "sqs_message_group_id": "test_id",
-    "incoming_message_group": "test_group",
-    "period_column": "period",
-    "lookups": "insert_fake_here",
-    "marine_mismatch_check": "true"
+    "method_name": "enrichment_method"
 }
 
 method_runtime_variables = {
@@ -57,8 +50,8 @@ method_runtime_variables = {
         "data": None,
         "lookups": lookups,
         "marine_mismatch_check": "true",
-        "survey_column": "survey",
         "period_column": "period",
+        "survey_column": "survey",
         "identifier_column": "responder_id"
     }
 }
@@ -72,9 +65,11 @@ wrangler_runtime_variables = {
             "run_id": "bob",
             "queue_url": "Earl",
             "marine_mismatch_check": "true",
-            "in_file_name": {
-                "enrichment": "test_wrangler_input.json"
-            }
+            "incoming_message_group_id": "test_group",
+            "in_file_name": "test_wrangler_input",
+            "out_file_name": "test_wrangler_output.json",
+            "outgoing_message_group_id": "test_id",
+            "period_column": "period"
         }
 }
 
@@ -223,8 +218,8 @@ def test_data_enrichment(lookup_data, column_names, file_list, marine_check):
 @pytest.mark.parametrize(
     "file_name,column_names,join_column",
     [
-        ("responder_county_lookup.json", ["responder_id", "county"], "responder_id"),
-        ("region_lookup.json", ["region", "gor_code"], "gor_code")
+        ("responder_county_lookup", ["responder_id", "county"], "responder_id"),
+        ("region_lookup", ["region", "gor_code"], "gor_code")
     ])
 @mock_s3
 def test_do_merge(file_name, column_names, join_column):
@@ -241,7 +236,7 @@ def test_do_merge(file_name, column_names, join_column):
     bucket_name = "test_bucket"
     client = test_generic_library.create_bucket(bucket_name)
 
-    test_generic_library.upload_files(client, bucket_name, [file_name])
+    test_generic_library.upload_files(client, bucket_name, [(file_name + ".json")])
 
     output = lambda_method_function.do_merge(
         test_data, file_name, column_names, join_column, bucket_name
@@ -357,7 +352,8 @@ def test_wrangler_success(mock_s3_get, mock_s3_put):
         test_data_prepared = file_3.read()
     prepared_data = pd.DataFrame(json.loads(test_data_prepared))
 
-    with open("tests/fixtures/" + wrangler_environment_variables["out_file_name"],
+    with open("tests/fixtures/" +
+              wrangler_runtime_variables["RuntimeVariables"]["out_file_name"],
               "r") as file_4:
         test_data_produced = file_4.read()
     produced_data = pd.DataFrame(json.loads(test_data_produced))

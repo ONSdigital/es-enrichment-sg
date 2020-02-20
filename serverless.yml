@@ -42,12 +42,8 @@ functions:
       checkpoint: 1
       bucket_name: results-s3-bucket
       identifier_column: responder_id
-      incoming_message_group: ingest-takeon-data-out
       method_name: es-enrichment-method
-      out_file_name: enrichment_out.json
       sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
-      sqs_message_group_id: enrichment-out
-      period_column: period
 
   deploy-enrichment-method:
     name: es-enrichment-method
