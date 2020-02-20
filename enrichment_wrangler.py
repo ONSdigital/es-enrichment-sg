@@ -9,15 +9,11 @@ from marshmallow import Schema, fields
 
 
 class EnvironSchema(Schema):
-    checkpoint = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
+    checkpoint = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
-    incoming_message_group = fields.Str(required=True)
     method_name = fields.Str(required=True)
-    out_file_name = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
-    sqs_message_group_id = fields.Str(required=True)
-    period_column = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -52,22 +48,22 @@ def lambda_handler(event, context):
         logger.info("Validated parameters.")
 
         # Environment Variables.
-        checkpoint = int(config["checkpoint"])
         bucket_name = config["bucket_name"]
+        checkpoint = int(config["checkpoint"])
         identifier_column = config['identifier_column']
-        incoming_message_group = config["incoming_message_group"]
         method_name = config["method_name"]
-        out_file_name = config["out_file_name"]
-        period_column = config['period_column']
         sns_topic_arn = config["sns_topic_arn"]
-        sqs_message_group_id = config["sqs_message_group_id"]
 
         # Runtime Variables.
         lookups = event['RuntimeVariables']['lookups']
-        survey_column = event['RuntimeVariables']["survey_column"]
-        sqs_queue_url = event['RuntimeVariables']["queue_url"]
-        in_file_name = event['RuntimeVariables']["in_file_name"]['enrichment']
+        in_file_name = event['RuntimeVariables']['in_file_name']
+        incoming_message_group_id = event['RuntimeVariables']['incoming_message_group_id']
+        out_file_name = event['RuntimeVariables']['out_file_name']
+        outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
         marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
+        period_column = event['RuntimeVariables']['period_column']
+        sqs_queue_url = event['RuntimeVariables']["queue_url"]
+        survey_column = event['RuntimeVariables']["survey_column"]
 
         logger.info("Retrieved configuration variables.")
 
@@ -76,7 +72,7 @@ def lambda_handler(event, context):
         sqs = boto3.client("sqs", region_name='eu-west-2')
         data_df, receipt_handler = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
                                                                in_file_name,
-                                                               incoming_message_group,
+                                                               incoming_message_group_id,
                                                                run_id)
 
         logger.info("Retrieved data from s3")
@@ -106,7 +102,7 @@ def lambda_handler(event, context):
         anomalies = json_response["anomalies"]
 
         aws_functions.save_data(bucket_name, out_file_name, json_response["data"],
-                                sqs_queue_url, sqs_message_group_id, run_id)
+                                sqs_queue_url, outgoing_message_group_id, run_id)
 
         logger.info("Successfully sent data to s3.")
 
