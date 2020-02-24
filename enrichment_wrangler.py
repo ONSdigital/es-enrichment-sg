@@ -58,6 +58,7 @@ def lambda_handler(event, context):
         lookups = event['RuntimeVariables']['lookups']
         in_file_name = event['RuntimeVariables']['in_file_name']
         incoming_message_group_id = event['RuntimeVariables']['incoming_message_group_id']
+        location = event['RuntimeVariables']["location"]
         out_file_name = event['RuntimeVariables']['out_file_name']
         outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
         marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
@@ -73,7 +74,7 @@ def lambda_handler(event, context):
         data_df, receipt_handler = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
                                                                in_file_name,
                                                                incoming_message_group_id,
-                                                               run_id)
+                                                               location)
 
         logger.info("Retrieved data from s3")
         data_json = data_df.to_json(orient="records")
@@ -102,7 +103,7 @@ def lambda_handler(event, context):
         anomalies = json_response["anomalies"]
 
         aws_functions.save_data(bucket_name, out_file_name, json_response["data"],
-                                sqs_queue_url, outgoing_message_group_id, run_id)
+                                sqs_queue_url, outgoing_message_group_id, location)
 
         logger.info("Successfully sent data to s3.")
 
