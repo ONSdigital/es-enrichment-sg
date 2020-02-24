@@ -48,6 +48,7 @@ wrangler_environment_variables = {
 method_runtime_variables = {
     "RuntimeVariables": {
         "data": None,
+        "location": "Here",
         "lookups": lookups,
         "marine_mismatch_check": "true",
         "period_column": "period",
@@ -60,6 +61,7 @@ wrangler_runtime_variables = {
     "RuntimeVariables":
         {
             "lookups": lookups,
+            "location": "Here",
             "checkpoint": "999",
             "survey_column": "survey",
             "run_id": "bob",
