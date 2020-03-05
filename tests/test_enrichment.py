@@ -86,7 +86,7 @@ wrangler_runtime_variables = {
     [
         (lambda_method_function, method_runtime_variables,
          method_environment_variables, "tests/fixtures/test_method_input.json",
-         "AWS Error", test_generic_library.method_assert),
+         "Could not find", test_generic_library.method_assert),
         (lambda_wrangler_function, wrangler_runtime_variables,
          wrangler_environment_variables, None,
          "AWS Error", test_generic_library.wrangler_assert)
