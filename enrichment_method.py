@@ -3,7 +3,7 @@ import os
 
 import pandas as pd
 from botocore.exceptions import ClientError
-from es_aws_functions import aws_functions
+from es_aws_functions import aws_functions, general_functions
 from marshmallow import Schema, fields
 
 
@@ -22,12 +22,14 @@ def lambda_handler(event, context):
     # Set up logger.
     current_module = "Enrichment - Method"
     error_message = ''
-    log_message = ''
     logger = logging.getLogger("Enrichment")
     logger.setLevel(10)
+    run_id = 0
     try:
         logger.info("Starting Enrichment Method")
-
+        # Retrieve run_id before input validation
+        # Because it is used in exception handling
+        run_id = event['RuntimeVariables']['run_id']
         schema = EnvironSchema()
         config, errors = schema.load(os.environ)
         if errors:
@@ -70,33 +72,12 @@ def lambda_handler(event, context):
         logger.info("DF(s) converted back to JSON.")
 
         final_output = {"data": json_out, "anomalies": anomaly_out}
-    # Raise value validation error.
-    except ValueError as e:
-        error_message = "Parameter Validation Error in " + current_module \
-                        + " |- " + str(e.args) + " | Request ID: " \
-                        + str(context.aws_request_id)
-        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # Raise client based error.
-    except ClientError as e:
-        error_message = "AWS Error (" + str(e.response['Error']['Code']) \
-                        + ") " + current_module + " |- " + str(e.args) \
-                        + " | Request ID: " + str(context.aws_request_id)
-        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # Raise key/index error.
-    except KeyError as e:
-        error_message = "Key Error in " + current_module + " |- " + \
-                        str(e.args) + " | Request ID: " \
-                        + str(context.aws_request_id)
-        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-    # General exception.
     except Exception as e:
-        error_message = "General Error in " + current_module + \
-                        " (" + str(type(e)) + ") |- " + str(e.args) + \
-                        " | Request ID: " + str(context.aws_request_id)
-        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context)
     finally:
         if (len(error_message)) > 0:
-            logger.error(log_message)
+            logger.error(error_message)
             return {"success": False, "error": error_message}
 
     logger.info("Successfully completed module: " + current_module)
