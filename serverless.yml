@@ -43,7 +43,6 @@ functions:
       bucket_name: results-s3-bucket
       identifier_column: responder_id
       method_name: es-enrichment-method
-      sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
 
   deploy-enrichment-method:
     name: es-enrichment-method

@@ -38,7 +38,6 @@ method_environment_variables = {
 }
 
 wrangler_environment_variables = {
-    "sns_topic_arn": "fake_sns_arn",
     "bucket_name": "test_bucket",
     "checkpoint": "999",
     "identifier_column": "responder_id",
@@ -72,6 +71,7 @@ wrangler_runtime_variables = {
             "in_file_name": "test_wrangler_input",
             "out_file_name": "test_wrangler_output.json",
             "outgoing_message_group_id": "test_id",
+            "sns_topic_arn": "fake_sns_arn",
             "period_column": "period"
         }
 }
