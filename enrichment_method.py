@@ -113,7 +113,8 @@ def marine_mismatch_detector(data, survey_column, check_column,
     :param check_column: column to check against(marine) - String
     :param period_column: Column that holds the period - String
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
-    :return: bad_data_with_marine: Df containing information about any reference that is producing marine when it shouldn't - DataFrame
+    :return: bad_data_with_marine: Df containing information about any reference that is 
+    producing marine when it shouldn't - DataFrame
     """
 
     bad_data = data[
