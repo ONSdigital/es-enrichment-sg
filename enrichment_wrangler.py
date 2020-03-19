@@ -59,8 +59,8 @@ def lambda_handler(event, context):
         outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
         marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
         period_column = event['RuntimeVariables']['period_column']
-        sqs_queue_url = event['RuntimeVariables']["queue_url"]
         sns_topic_arn = event['RuntimeVariables']["sns_topic_arn"]
+        sqs_queue_url = event['RuntimeVariables']["queue_url"]
         survey_column = event['RuntimeVariables']["survey_column"]
 
         logger.info("Retrieved configuration variables.")
@@ -112,7 +112,8 @@ def lambda_handler(event, context):
         checkpoint += 1
 
     except Exception as e:
-        error_message = general_functions.handle_exception(e, current_module, run_id, context)
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context)
     finally:
         if (len(error_message)) > 0:
             logger.error(error_message)
