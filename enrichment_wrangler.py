@@ -113,7 +113,8 @@ def lambda_handler(event, context):
         checkpoint += 1
 
     except Exception as e:
-        error_message = general_functions.handle_exception(e, current_module, run_id, context)
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context)
     finally:
         if (len(error_message)) > 0:
             logger.error(error_message)
