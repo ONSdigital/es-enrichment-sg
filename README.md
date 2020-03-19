@@ -1,6 +1,6 @@
 # es-enrichment-sg
 Enrichment - Python Lambdas.
-
+mike
 ## Wrangler
 The enrichment wrangler is the start of the process. It first picks up the sng data from s3. It invokes the method lambda with this data. The method response contains two dataframes(data and anomalies), which are split out in the wrangler. Data is sent on to the sqs queue whereas the anomalies are sent via an sns topic.
 
