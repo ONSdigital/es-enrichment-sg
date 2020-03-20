@@ -83,7 +83,8 @@ def lambda_handler(event, context):
                 "marine_mismatch_check": marine_mismatch_check,
                 "survey_column": survey_column,
                 "period_column": period_column,
-                "identifier_column": identifier_column
+                "identifier_column": identifier_column,
+                "run_id": run_id
             }
         }
         response = lambda_client.invoke(
