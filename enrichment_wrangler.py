@@ -12,7 +12,6 @@ class EnvironSchema(Schema):
     checkpoint = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
     method_name = fields.Str(required=True)
-    sns_topic_arn = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -50,7 +49,6 @@ def lambda_handler(event, context):
         checkpoint = int(config["checkpoint"])
         identifier_column = config['identifier_column']
         method_name = config["method_name"]
-        sns_topic_arn = config["sns_topic_arn"]
 
         # Runtime Variables.
         lookups = event['RuntimeVariables']['lookups']
@@ -61,6 +59,7 @@ def lambda_handler(event, context):
         outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
         marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
         period_column = event['RuntimeVariables']['period_column']
+        sns_topic_arn = event['RuntimeVariables']["sns_topic_arn"]
         sqs_queue_url = event['RuntimeVariables']["queue_url"]
         survey_column = event['RuntimeVariables']["survey_column"]
 
