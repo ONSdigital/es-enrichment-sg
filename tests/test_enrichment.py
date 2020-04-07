@@ -317,7 +317,7 @@ def test_missing_column_detector():
             side_effect=test_generic_library.replacement_get_dataframe)
 def test_wrangler_success_passed(mock_s3_get):
     """
-    Runs the wrangler function.
+    Runs the wrangler function up to the method invoke.
     :param None
     :return Test Pass/Fail
     """
@@ -334,9 +334,13 @@ def test_wrangler_success_passed(mock_s3_get):
             mock_client_object = mock.Mock()
             mock_client.return_value = mock_client_object
 
+            # Rather than mock the get/decode we tell the code that when the invoke is
+            # called pass the variables to this replacement function instead.
             mock_client_object.invoke.side_effect =\
                 test_generic_library.replacement_invoke
 
+            # This stops the Error caused by the replacement function from stopping
+            # the test.
             with pytest.raises(exception_classes.LambdaFailure):
                 lambda_wrangler_function.lambda_handler(
                     wrangler_runtime_variables, test_generic_library.context_object
@@ -350,14 +354,15 @@ def test_wrangler_success_passed(mock_s3_get):
         test_data_produced = file_3.read()
     produced_data = pd.DataFrame(json.loads(test_data_produced))
 
+    # Compares the data.
     assert_frame_equal(produced_data, prepared_data)
 
     with open("tests/fixtures/test_wrangler_to_method_runtime.json", "r") as file_4:
         test_dict_prepared = file_4.read()
     produced_dict = json.loads(test_dict_prepared)
 
+    # Ensures data is not in the RuntimeVariables and then compares.
     method_runtime_variables["RuntimeVariables"]["data"] = None
-
     assert produced_dict == method_runtime_variables["RuntimeVariables"]
 
 
@@ -368,7 +373,7 @@ def test_wrangler_success_passed(mock_s3_get):
             side_effect=test_generic_library.replacement_save_data)
 def test_wrangler_success_returned(mock_s3_get, mock_s3_put):
     """
-    Runs the wrangler function.
+    Runs the wrangler function after the method invoke.
     :param None
     :return Test Pass/Fail
     """
