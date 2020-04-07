@@ -335,7 +335,8 @@ def test_wrangler_success_passed(mock_s3_get):
             mock_client_object = mock.Mock()
             mock_client.return_value = mock_client_object
 
-            mock_client_object.invoke.side_effect = test_generic_library.replacement_invoke
+            mock_client_object.invoke.side_effect =\
+                test_generic_library.replacement_invoke
 
             with pytest.raises(exception_classes.LambdaFailure) as exc_info:
                 lambda_wrangler_function.lambda_handler(
@@ -346,13 +347,13 @@ def test_wrangler_success_passed(mock_s3_get):
         test_data_prepared = file_2.read()
     prepared_data = pd.DataFrame(json.loads(test_data_prepared))
 
-    with open("tests/fixtures/test_wrangler_method_input.json", "r") as file_3:
+    with open("tests/fixtures/test_wrangler_to_method_input.json", "r") as file_3:
         test_data_produced = file_3.read()
     produced_data = pd.DataFrame(json.loads(test_data_produced))
 
     assert_frame_equal(produced_data, prepared_data)
 
-    with open("tests/fixtures/test_wrangler_method_runtime.json", "r") as file_4:
+    with open("tests/fixtures/test_wrangler_to_method_runtime.json", "r") as file_4:
         test_dict_prepared = file_4.read()
     produced_dict = json.loads(test_dict_prepared)
 
