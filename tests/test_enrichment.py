@@ -10,7 +10,6 @@ from pandas.util.testing import assert_frame_equal
 import enrichment_method as lambda_method_function
 import enrichment_wrangler as lambda_wrangler_function
 
-import temp
 lookups = {
     "0": {"file_name": "responder_county_lookup",
           "columns_to_keep": ["responder_id", "county"],
