@@ -3,7 +3,7 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from es_aws_functions import test_generic_library, exception_classes
+from es_aws_functions import exception_classes, test_generic_library
 from moto import mock_s3
 from pandas.util.testing import assert_frame_equal
 
@@ -337,7 +337,7 @@ def test_wrangler_success_passed(mock_s3_get):
             mock_client_object.invoke.side_effect =\
                 test_generic_library.replacement_invoke
 
-            with pytest.raises(exception_classes.LambdaFailure) as exc_info:
+            with pytest.raises(exception_classes.LambdaFailure):
                 lambda_wrangler_function.lambda_handler(
                     wrangler_runtime_variables, test_generic_library.context_object
                 )
@@ -355,6 +355,8 @@ def test_wrangler_success_passed(mock_s3_get):
     with open("tests/fixtures/test_wrangler_to_method_runtime.json", "r") as file_4:
         test_dict_prepared = file_4.read()
     produced_dict = json.loads(test_dict_prepared)
+
+    method_runtime_variables["RuntimeVariables"]["data"] = None
 
     assert produced_dict == method_runtime_variables["RuntimeVariables"]
 
