@@ -3,7 +3,7 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from es_aws_functions import test_generic_library
+from es_aws_functions import exception_classes, test_generic_library
 from moto import mock_s3
 from pandas.util.testing import assert_frame_equal
 
@@ -47,13 +47,12 @@ wrangler_environment_variables = {
 method_runtime_variables = {
     "RuntimeVariables": {
         "data": None,
-        "location": "Here",
         "lookups": lookups,
         "marine_mismatch_check": "true",
         "period_column": "period",
         "survey_column": "survey",
         "identifier_column": "responder_id",
-        "run_id": 777
+        "run_id": "bob"
     }
 }
 
@@ -316,11 +315,65 @@ def test_missing_column_detector():
 @mock_s3
 @mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
             side_effect=test_generic_library.replacement_get_dataframe)
+def test_wrangler_success_passed(mock_s3_get):
+    """
+    Runs the wrangler function up to the method invoke.
+    :param None
+    :return Test Pass/Fail
+    """
+    bucket_name = wrangler_environment_variables["bucket_name"]
+    client = test_generic_library.create_bucket(bucket_name)
+
+    file_list = ["test_wrangler_input.json"]
+
+    test_generic_library.upload_files(client, bucket_name, file_list)
+
+    with mock.patch.dict(lambda_wrangler_function.os.environ,
+                         wrangler_environment_variables):
+        with mock.patch("enrichment_wrangler.boto3.client") as mock_client:
+            mock_client_object = mock.Mock()
+            mock_client.return_value = mock_client_object
+
+            # Rather than mock the get/decode we tell the code that when the invoke is
+            # called pass the variables to this replacement function instead.
+            mock_client_object.invoke.side_effect =\
+                test_generic_library.replacement_invoke
+
+            # This stops the Error caused by the replacement function from stopping
+            # the test.
+            with pytest.raises(exception_classes.LambdaFailure):
+                lambda_wrangler_function.lambda_handler(
+                    wrangler_runtime_variables, test_generic_library.context_object
+                )
+
+    with open("tests/fixtures/test_method_input.json", "r") as file_2:
+        test_data_prepared = file_2.read()
+    prepared_data = pd.DataFrame(json.loads(test_data_prepared))
+
+    with open("tests/fixtures/test_wrangler_to_method_input.json", "r") as file_3:
+        test_data_produced = file_3.read()
+    produced_data = pd.DataFrame(json.loads(test_data_produced))
+
+    # Compares the data.
+    assert_frame_equal(produced_data, prepared_data)
+
+    with open("tests/fixtures/test_wrangler_to_method_runtime.json", "r") as file_4:
+        test_dict_prepared = file_4.read()
+    produced_dict = json.loads(test_dict_prepared)
+
+    # Ensures data is not in the RuntimeVariables and then compares.
+    method_runtime_variables["RuntimeVariables"]["data"] = None
+    assert produced_dict == method_runtime_variables["RuntimeVariables"]
+
+
+@mock_s3
+@mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
+            side_effect=test_generic_library.replacement_get_dataframe)
 @mock.patch('enrichment_wrangler.aws_functions.save_data',
             side_effect=test_generic_library.replacement_save_data)
-def test_wrangler_success(mock_s3_get, mock_s3_put):
+def test_wrangler_success_returned(mock_s3_get, mock_s3_put):
     """
-    Runs the wrangler function.
+    Runs the wrangler function after the method invoke.
     :param None
     :return Test Pass/Fail
     """
