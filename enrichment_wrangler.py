@@ -7,11 +7,25 @@ from es_aws_functions import aws_functions, exception_classes, general_functions
 from marshmallow import Schema, fields
 
 
-class EnvironSchema(Schema):
+class EnvironmentSchema(Schema):
     bucket_name = fields.Str(required=True)
     checkpoint = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
     method_name = fields.Str(required=True)
+
+
+class RuntimeSchema(Schema):
+    lookups = fields.Dict(required=True)  # Nest Some Shizzle Maybe?
+    in_file_name = fields.Str(required=True)
+    incoming_message_group_id = fields.Str(required=True)
+    location = fields.Str(required=True)
+    out_file_name = fields.Str(required=True)
+    outgoing_message_group_id = fields.Str(required=True)
+    marine_mismatch_check = fields.Str(required=True)
+    period_column = fields.Str(required=True)
+    sns_topic_arn = fields.Str(required=True)
+    queue_url = fields.Str(required=True)
+    survey_column = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -24,7 +38,7 @@ def lambda_handler(event, context):
 
     # Set up logger.
     current_module = "Enrichment - Wrangler"
-    error_message = ''
+    error_message = ""
     logger = logging.getLogger("Enrichment")
     logger.setLevel(10)
 
@@ -34,40 +48,44 @@ def lambda_handler(event, context):
         logger.info("Enrichment Wrangler Begun")
         # Retrieve run_id before input validation
         # Because it is used in exception handling
-        run_id = event['RuntimeVariables']['run_id']
+        run_id = event["RuntimeVariables"]["run_id"]
 
-        schema = EnvironSchema()
-        config, errors = schema.load(os.environ)
+        env_var, errors = EnvironmentSchema().load(os.environ)
         if errors:
             logger.error(f"Error validating environment params: {errors}")
             raise ValueError(f"Error validating environment params: {errors}")
 
+        run_var, errors = RuntimeSchema().load(event["RuntimeVariables"])
+        if errors:
+            logger.error(f"Error validating runtime params: {errors}")
+            raise ValueError(f"Error validating runtime params: {errors}")
+
         logger.info("Validated parameters.")
 
         # Environment Variables.
-        bucket_name = config["bucket_name"]
-        checkpoint = int(config["checkpoint"])
-        identifier_column = config['identifier_column']
-        method_name = config["method_name"]
+        bucket_name = env_var["bucket_name"]
+        checkpoint = env_var["checkpoint"]
+        identifier_column = env_var["identifier_column"]
+        method_name = env_var["method_name"]
 
         # Runtime Variables.
-        lookups = event['RuntimeVariables']['lookups']
-        in_file_name = event['RuntimeVariables']['in_file_name']
-        incoming_message_group_id = event['RuntimeVariables']['incoming_message_group_id']
-        location = event['RuntimeVariables']["location"]
-        out_file_name = event['RuntimeVariables']['out_file_name']
-        outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
-        marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
-        period_column = event['RuntimeVariables']['period_column']
-        sns_topic_arn = event['RuntimeVariables']["sns_topic_arn"]
-        sqs_queue_url = event['RuntimeVariables']["queue_url"]
-        survey_column = event['RuntimeVariables']["survey_column"]
+        lookups = run_var["lookups"]
+        in_file_name = run_var["in_file_name"]
+        incoming_message_group_id = run_var["incoming_message_group_id"]
+        location = run_var["location"]
+        out_file_name = run_var["out_file_name"]
+        outgoing_message_group_id = run_var["outgoing_message_group_id"]
+        marine_mismatch_check = run_var["marine_mismatch_check"]
+        period_column = run_var["period_column"]
+        sns_topic_arn = run_var["sns_topic_arn"]
+        sqs_queue_url = run_var["queue_url"]
+        survey_column = run_var["survey_column"]
 
         logger.info("Retrieved configuration variables.")
 
         # Set up client.
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
-        sqs = boto3.client("sqs", region_name='eu-west-2')
+        sqs = boto3.client("sqs", region_name="eu-west-2")
         data_df, receipt_handler = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
                                                                in_file_name,
                                                                incoming_message_group_id,
@@ -95,8 +113,8 @@ def lambda_handler(event, context):
         json_response = json.loads(response.get("Payload").read().decode("utf-8"))
         logger.info("JSON extracted from method response.")
 
-        if not json_response['success']:
-            raise exception_classes.MethodFailure(json_response['error'])
+        if not json_response["success"]:
+            raise exception_classes.MethodFailure(json_response["error"])
 
         anomalies = json_response["anomalies"]
 
@@ -110,7 +128,6 @@ def lambda_handler(event, context):
         if receipt_handler:
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handler)
         logger.info("Successfully sent message to sns.")
-        checkpoint += 1
 
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
