@@ -143,7 +143,7 @@ def test_incomplete_read_error(mock_s3_get):
 def test_key_error(which_lambda, which_environment_variables,
                    expected_message, assertion):
     test_generic_library.key_error(which_lambda, which_environment_variables,
-                                   expected_message, assertion, {})
+                                   expected_message, assertion)
 
 
 @mock_s3
