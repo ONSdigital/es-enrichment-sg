@@ -1,1 +1,35 @@
-{"data": null, "lookups": {"0": {"file_name": "responder_county_lookup", "columns_to_keep": ["responder_id", "county"], "join_column": "responder_id", "required": ["county"]}, "1": {"file_name": "county_marine_lookup", "columns_to_keep": ["county_name", "region", "county", "marine"], "join_column": "county", "required": ["region", "marine"]}}, "marine_mismatch_check": "true", "survey_column": "survey", "period_column": "period", "identifier_column": "responder_id", "run_id": "bob"}
+{
+    "data": null,
+    "lookups": {
+        "0": {
+            "file_name": "responder_county_lookup",
+            "columns_to_keep": [
+                "responder_id",
+                "county"
+            ],
+            "join_column": "responder_id",
+            "required": [
+                "county"
+            ]
+        },
+        "1": {
+            "file_name": "county_marine_lookup",
+            "columns_to_keep": [
+                "county_name",
+                "region",
+                "county",
+                "marine"
+            ],
+            "join_column": "county",
+            "required": [
+                "region",
+                "marine"
+            ]
+        }
+    },
+    "marine_mismatch_check": "true",
+    "survey_column": "survey",
+    "period_column": "period",
+    "identifier_column": "responder_id",
+    "run_id": "bob"
+}
