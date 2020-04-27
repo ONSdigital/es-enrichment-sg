@@ -40,12 +40,12 @@ def lambda_handler(event, context):
         # Because it is used in exception handling
         run_id = event['RuntimeVariables']['run_id']
 
-        env_var, errors = EnvironmentSchema().load(os.environ)
+        environment_variables, errors = EnvironmentSchema().load(os.environ)
         if errors:
             logger.error(f"Error validating environment params: {errors}")
             raise ValueError(f"Error validating environment params: {errors}")
 
-        run_var, errors = RuntimeSchema().load(event["RuntimeVariables"])
+        runtime_variables, errors = RuntimeSchema().load(event["RuntimeVariables"])
         if errors:
             logger.error(f"Error validating runtime params: {errors}")
             raise ValueError(f"Error validating runtime params: {errors}")
@@ -53,15 +53,15 @@ def lambda_handler(event, context):
         logger.info("Validated parameters.")
 
         # Environment Variables.
-        bucket_name = env_var["bucket_name"]
+        bucket_name = environment_variables["bucket_name"]
 
         # Runtime Variables.
-        data = run_var['data']
-        identifier_column = run_var["identifier_column"]
-        lookups = run_var['lookups']
-        marine_mismatch_check = run_var["marine_mismatch_check"]
-        period_column = run_var["period_column"]
-        survey_column = run_var["survey_column"]
+        data = runtime_variables['data']
+        identifier_column = runtime_variables["identifier_column"]
+        lookups = runtime_variables['lookups']
+        marine_mismatch_check = runtime_variables["marine_mismatch_check"]
+        period_column = runtime_variables["period_column"]
+        survey_column = runtime_variables["survey_column"]
 
         logger.info("Retrieved configuration variables.")
 

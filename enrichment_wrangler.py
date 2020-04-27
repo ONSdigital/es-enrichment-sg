@@ -50,12 +50,12 @@ def lambda_handler(event, context):
         # Because it is used in exception handling
         run_id = event["RuntimeVariables"]["run_id"]
 
-        env_var, errors = EnvironmentSchema().load(os.environ)
+        environment_variables, errors = EnvironmentSchema().load(os.environ)
         if errors:
             logger.error(f"Error validating environment params: {errors}")
             raise ValueError(f"Error validating environment params: {errors}")
 
-        run_var, errors = RuntimeSchema().load(event["RuntimeVariables"])
+        runtime_variables, errors = RuntimeSchema().load(event["RuntimeVariables"])
         if errors:
             logger.error(f"Error validating runtime params: {errors}")
             raise ValueError(f"Error validating runtime params: {errors}")
@@ -63,23 +63,23 @@ def lambda_handler(event, context):
         logger.info("Validated parameters.")
 
         # Environment Variables.
-        bucket_name = env_var["bucket_name"]
-        checkpoint = env_var["checkpoint"]
-        identifier_column = env_var["identifier_column"]
-        method_name = env_var["method_name"]
+        bucket_name = environment_variables["bucket_name"]
+        checkpoint = environment_variables["checkpoint"]
+        identifier_column = environment_variables["identifier_column"]
+        method_name = environment_variables["method_name"]
 
         # Runtime Variables.
-        lookups = run_var["lookups"]
-        in_file_name = run_var["in_file_name"]
-        incoming_message_group_id = run_var["incoming_message_group_id"]
-        location = run_var["location"]
-        out_file_name = run_var["out_file_name"]
-        outgoing_message_group_id = run_var["outgoing_message_group_id"]
-        marine_mismatch_check = run_var["marine_mismatch_check"]
-        period_column = run_var["period_column"]
-        sns_topic_arn = run_var["sns_topic_arn"]
-        sqs_queue_url = run_var["queue_url"]
-        survey_column = run_var["survey_column"]
+        lookups = runtime_variables["lookups"]
+        in_file_name = runtime_variables["in_file_name"]
+        incoming_message_group_id = runtime_variables["incoming_message_group_id"]
+        location = runtime_variables["location"]
+        out_file_name = runtime_variables["out_file_name"]
+        outgoing_message_group_id = runtime_variables["outgoing_message_group_id"]
+        marine_mismatch_check = runtime_variables["marine_mismatch_check"]
+        period_column = runtime_variables["period_column"]
+        sns_topic_arn = runtime_variables["sns_topic_arn"]
+        sqs_queue_url = runtime_variables["queue_url"]
+        survey_column = runtime_variables["survey_column"]
 
         logger.info("Retrieved configuration variables.")
 
