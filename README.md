@@ -37,7 +37,7 @@ example:
         ]
       }
     },
-    "marine_mismatch_check": "true",
+    "marine_mismatch_check": true,
     "period_column": "period",
     "identifier_column": "responder_id"
 }

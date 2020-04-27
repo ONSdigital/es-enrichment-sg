@@ -48,7 +48,7 @@ method_runtime_variables = {
     "RuntimeVariables": {
         "data": None,
         "lookups": lookups,
-        "marine_mismatch_check": "true",
+        "marine_mismatch_check": True,
         "period_column": "period",
         "survey_column": "survey",
         "identifier_column": "responder_id",
@@ -65,7 +65,7 @@ wrangler_runtime_variables = {
             "survey_column": "survey",
             "run_id": "bob",
             "queue_url": "Earl",
-            "marine_mismatch_check": "true",
+            "marine_mismatch_check": True,
             "incoming_message_group_id": "test_group",
             "in_file_name": "test_wrangler_input",
             "out_file_name": "test_wrangler_output.json",

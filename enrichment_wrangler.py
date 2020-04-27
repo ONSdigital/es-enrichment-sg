@@ -21,7 +21,7 @@ class RuntimeSchema(Schema):
     location = fields.Str(required=True)
     out_file_name = fields.Str(required=True)
     outgoing_message_group_id = fields.Str(required=True)
-    marine_mismatch_check = fields.Str(required=True)
+    marine_mismatch_check = fields.Boolean(required=True)
     period_column = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
     queue_url = fields.Str(required=True)
