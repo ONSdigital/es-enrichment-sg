@@ -6,8 +6,18 @@ from es_aws_functions import aws_functions, general_functions
 from marshmallow import Schema, fields
 
 
-class EnvironSchema(Schema):
+class EnvironmentSchema(Schema):
     bucket_name = fields.Str(required=True)
+
+
+class RuntimeSchema(Schema):
+    data = fields.Str(required=True)
+    identifier_column = fields.Str(required=True)
+    lookups = fields.Dict(required=True)
+    marine_mismatch_check = fields.Str(required=True)
+    period_column = fields.Str(required=True)
+    run_id = fields.Str(required=True)
+    survey_column = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -29,24 +39,29 @@ def lambda_handler(event, context):
         # Retrieve run_id before input validation
         # Because it is used in exception handling
         run_id = event['RuntimeVariables']['run_id']
-        schema = EnvironSchema()
-        config, errors = schema.load(os.environ)
+
+        environment_variables, errors = EnvironmentSchema().load(os.environ)
         if errors:
             logger.error(f"Error validating environment params: {errors}")
             raise ValueError(f"Error validating environment params: {errors}")
 
+        runtime_variables, errors = RuntimeSchema().load(event["RuntimeVariables"])
+        if errors:
+            logger.error(f"Error validating runtime params: {errors}")
+            raise ValueError(f"Error validating runtime params: {errors}")
+
         logger.info("Validated parameters.")
 
         # Environment Variables.
-        bucket_name = config["bucket_name"]
+        bucket_name = environment_variables["bucket_name"]
 
         # Runtime Variables.
-        data = event['RuntimeVariables']['data']
-        identifier_column = event['RuntimeVariables']["identifier_column"]
-        lookups = event['RuntimeVariables']['lookups']
-        marine_mismatch_check = event['RuntimeVariables']["marine_mismatch_check"]
-        period_column = event['RuntimeVariables']["period_column"]
-        survey_column = event['RuntimeVariables']["survey_column"]
+        data = runtime_variables['data']
+        identifier_column = runtime_variables["identifier_column"]
+        lookups = runtime_variables['lookups']
+        marine_mismatch_check = runtime_variables["marine_mismatch_check"]
+        period_column = runtime_variables["period_column"]
+        survey_column = runtime_variables["survey_column"]
 
         logger.info("Retrieved configuration variables.")
 
