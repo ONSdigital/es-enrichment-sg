@@ -48,7 +48,7 @@ method_runtime_variables = {
     "RuntimeVariables": {
         "data": None,
         "lookups": lookups,
-        "marine_mismatch_check": "true",
+        "marine_mismatch_check": True,
         "period_column": "period",
         "survey_column": "survey",
         "identifier_column": "responder_id",
@@ -65,7 +65,7 @@ wrangler_runtime_variables = {
             "survey_column": "survey",
             "run_id": "bob",
             "queue_url": "Earl",
-            "marine_mismatch_check": "true",
+            "marine_mismatch_check": True,
             "incoming_message_group_id": "test_group",
             "in_file_name": "test_wrangler_input",
             "out_file_name": "test_wrangler_output.json",
@@ -188,9 +188,9 @@ def test_value_error(which_lambda, expected_message, assertion,
     "lookup_data,column_names,file_list,marine_check",
     [
         (lookups, ["county", "county_name"],
-         ["responder_county_lookup.json", "county_marine_lookup.json"], False),
+         ["responder_county_lookup.json", "county_marine_lookup.json"], True),
         (bricks_blocks_lookups, ["region"],
-         ["region_lookup.json"], True)
+         ["region_lookup.json"], False)
     ])
 @mock_s3
 def test_data_enrichment(lookup_data, column_names, file_list, marine_check):

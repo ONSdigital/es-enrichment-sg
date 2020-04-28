@@ -14,7 +14,7 @@ class RuntimeSchema(Schema):
     data = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
     lookups = fields.Dict(required=True)
-    marine_mismatch_check = fields.Str(required=True)
+    marine_mismatch_check = fields.Boolean(required=True)
     period_column = fields.Str(required=True)
     run_id = fields.Str(required=True)
     survey_column = fields.Str(required=True)
@@ -155,7 +155,7 @@ def data_enrichment(data_df, marine_mismatch_check, survey_column, period_column
     Does the enrichment process by merging together several datasets. Checks for marine
     mismatch, unallocated county, and unallocated region are performed at this point.
     :param data_df: DataFrame of data to be enriched - dataframe
-    :param marine_mismatch_check: True/False - Should check be done  - String
+    :param marine_mismatch_check: True/False - Should check be done  - Boolean
     :param survey_column: Survey code value - String
     :param period_column: Column that holds period. (period) - String
     :param bucket_name: Name of the s3 bucket - String
@@ -186,7 +186,7 @@ def data_enrichment(data_df, marine_mismatch_check, survey_column, period_column
                                                        identifier_column)])
 
     # Do Marine mismatch check here.
-    if marine_mismatch_check == "true":
+    if marine_mismatch_check:
         marine_anomalies = marine_mismatch_detector(
             data_df,
             survey_column,
