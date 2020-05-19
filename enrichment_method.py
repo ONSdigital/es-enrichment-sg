@@ -20,6 +20,13 @@ class RuntimeSchema(Schema):
     survey_column = fields.Str(required=True)
 
 
+class LookupSchema(Schema):
+    file_name = fields.Str(required=True)
+    columns_to_keep = fields.List(fields.String, required=True)
+    join_column = fields.Str(required=True)
+    required = fields.List(fields.String, required=True)
+
+
 def lambda_handler(event, context):
     """
     Performs enrichment process, joining 2 lookups onto data and detecting anomalies.
@@ -50,6 +57,19 @@ def lambda_handler(event, context):
             logger.error(f"Error validating runtime params: {errors}")
             raise ValueError(f"Error validating runtime params: {errors}")
 
+        lookups = runtime_variables['lookups']
+
+        iteration_check = 0
+        max_iteration = len(lookups)
+        while iteration_check < max_iteration:
+            value = lookups[str(iteration_check)]
+
+            _, errors = LookupSchema().load(value)
+            if errors:
+                logger.error(f"Error validating lookup params: {errors}")
+                raise ValueError(f"Error validating lookup params: {errors}")
+            iteration_check += 1
+
         logger.info("Validated parameters.")
 
         # Environment Variables.
@@ -58,7 +78,6 @@ def lambda_handler(event, context):
         # Runtime Variables.
         data = runtime_variables['data']
         identifier_column = runtime_variables["identifier_column"]
-        lookups = runtime_variables['lookups']
         marine_mismatch_check = runtime_variables["marine_mismatch_check"]
         period_column = runtime_variables["period_column"]
         survey_column = runtime_variables["survey_column"]

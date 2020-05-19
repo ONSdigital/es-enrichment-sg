@@ -15,7 +15,7 @@ class EnvironmentSchema(Schema):
 
 
 class RuntimeSchema(Schema):
-    lookups = fields.Dict(required=True)  # Nest Some Shizzle Maybe?
+    lookups = fields.Dict(required=True)
     in_file_name = fields.Str(required=True)
     incoming_message_group_id = fields.Str(required=True)
     location = fields.Str(required=True)
