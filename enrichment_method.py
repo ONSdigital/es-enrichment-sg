@@ -4,20 +4,11 @@ import os
 import pandas as pd
 from es_aws_functions import aws_functions, general_functions
 from marshmallow import Schema, fields
+from marshmallow.validate import Range
 
 
 class EnvironmentSchema(Schema):
     bucket_name = fields.Str(required=True)
-
-
-class RuntimeSchema(Schema):
-    data = fields.Str(required=True)
-    identifier_column = fields.Str(required=True)
-    lookups = fields.Dict(required=True)
-    marine_mismatch_check = fields.Boolean(required=True)
-    period_column = fields.Str(required=True)
-    run_id = fields.Str(required=True)
-    survey_column = fields.Str(required=True)
 
 
 class LookupSchema(Schema):
@@ -25,6 +16,18 @@ class LookupSchema(Schema):
     columns_to_keep = fields.List(fields.String, required=True)
     join_column = fields.Str(required=True)
     required = fields.List(fields.String, required=True)
+
+
+class RuntimeSchema(Schema):
+    data = fields.Str(required=True)
+    identifier_column = fields.Str(required=True)
+    lookups = fields.Dict(
+        keys=fields.Int(validate=Range(min=0)),
+        values=fields.Nested(LookupSchema, required=True))
+    marine_mismatch_check = fields.Boolean(required=True)
+    period_column = fields.Str(required=True)
+    run_id = fields.Str(required=True)
+    survey_column = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -57,19 +60,6 @@ def lambda_handler(event, context):
             logger.error(f"Error validating runtime params: {errors}")
             raise ValueError(f"Error validating runtime params: {errors}")
 
-        lookups = runtime_variables['lookups']
-
-        iteration_check = 0
-        max_iteration = len(lookups)
-        while iteration_check < max_iteration:
-            value = lookups[str(iteration_check)]
-
-            _, errors = LookupSchema().load(value)
-            if errors:
-                logger.error(f"Error validating lookup params: {errors}")
-                raise ValueError(f"Error validating lookup params: {errors}")
-            iteration_check += 1
-
         logger.info("Validated parameters.")
 
         # Environment Variables.
@@ -78,6 +68,7 @@ def lambda_handler(event, context):
         # Runtime Variables.
         data = runtime_variables['data']
         identifier_column = runtime_variables["identifier_column"]
+        lookups = runtime_variables['lookups']
         marine_mismatch_check = runtime_variables["marine_mismatch_check"]
         period_column = runtime_variables["period_column"]
         survey_column = runtime_variables["survey_column"]
