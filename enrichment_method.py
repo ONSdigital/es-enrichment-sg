@@ -4,16 +4,26 @@ import os
 import pandas as pd
 from es_aws_functions import aws_functions, general_functions
 from marshmallow import Schema, fields
+from marshmallow.validate import Range
 
 
 class EnvironmentSchema(Schema):
     bucket_name = fields.Str(required=True)
 
 
+class LookupSchema(Schema):
+    file_name = fields.Str(required=True)
+    columns_to_keep = fields.List(fields.String, required=True)
+    join_column = fields.Str(required=True)
+    required = fields.List(fields.String, required=True)
+
+
 class RuntimeSchema(Schema):
     data = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
-    lookups = fields.Dict(required=True)
+    lookups = fields.Dict(
+        keys=fields.Int(validate=Range(min=0)),
+        values=fields.Nested(LookupSchema, required=True))
     marine_mismatch_check = fields.Boolean(required=True)
     period_column = fields.Str(required=True)
     run_id = fields.Str(required=True)
