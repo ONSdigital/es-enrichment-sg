@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from es_aws_functions import exception_classes, test_generic_library
 from moto import mock_s3
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 
 import enrichment_method as lambda_method_function
 import enrichment_wrangler as lambda_wrangler_function
@@ -300,7 +300,7 @@ def test_method_success():
         output = lambda_method_function.lambda_handler(
             method_runtime_variables, test_generic_library.context_object)
 
-        produced_data = pd.DataFrame(json.loads(output["data"]))
+        produced_data = pd.DataFrame(json.loads(output["data"])).sort_index(axis=1)
 
     assert output["success"]
     assert_frame_equal(produced_data, prepared_data)

@@ -129,12 +129,11 @@ def marine_mismatch_detector(data, survey_column, check_column,
     :return: bad_data_with_marine: Df containing information about any reference that is
     producing marine when it shouldn't - DataFrame
     """
-
-    bad_data = data[
-        (data[survey_column] == "076")
-        & (data[check_column] == "n")
-        ]
-    bad_data["issue"] = "Reference should not produce marine data."
+    bad_data = data.copy()
+    bad_data.loc[
+        (bad_data[survey_column] == "076")
+        & (bad_data[check_column] == "n"), "issue"] =\
+        "Reference should not produce marine data."
     return bad_data[
         [
             identifier_column,
@@ -155,14 +154,14 @@ def missing_column_detector(data, columns_to_check, identifier_column):
     :return: data_without_columns: DF containing information about any reference without the column. - DataFrame
     """
     # Create empty dataframe to hold output.
-    data_without_columns = pd.DataFrame()
+    data_without_columns = data.copy()
 
     # For each of the passed in columns to check(1 or more).
     # Create dataframe holding rows where column was null.
     for column_to_check in columns_to_check:
-        data_without_column = data[data[column_to_check].isnull()]
-        data_without_column["issue"] = str(column_to_check) + " missing in lookup."
-        data_without_columns = pd.concat([data_without_columns, data_without_column])
+        data_without_columns.loc[
+            data_without_columns[column_to_check].isnull(), "issue"
+        ] = str(column_to_check) + " missing in lookup."
 
     return data_without_columns[[identifier_column, "issue"]]
 
