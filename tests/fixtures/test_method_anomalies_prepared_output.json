@@ -1,0 +1,9 @@
+[
+    {
+        "responder_id": 666,
+        "issue": "Reference should not produce marine data.",
+        "survey": "076",
+        "marine": "n",
+        "period": 201809.0
+    }
+]

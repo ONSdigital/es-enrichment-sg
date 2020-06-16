@@ -130,10 +130,10 @@ def marine_mismatch_detector(data, survey_column, check_column,
     producing marine when it shouldn't - DataFrame
     """
     bad_data = data.copy()
-    bad_data.loc[
+    bad_data = bad_data[
         (bad_data[survey_column] == "076")
-        & (bad_data[check_column] == "n"), "issue"] =\
-        "Reference should not produce marine data."
+        & (bad_data[check_column] == "n")]
+    bad_data["issue"] = "Reference should not produce marine data."
     return bad_data[
         [
             identifier_column,
@@ -153,16 +153,17 @@ def missing_column_detector(data, columns_to_check, identifier_column):
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
     :return: data_without_columns: DF containing information about any reference without the column. - DataFrame
     """
-    # Create empty dataframe to hold output.
+    # Create a copy of the dataframe to hold output.
     data_without_columns = data.copy()
 
     # For each of the passed in columns to check(1 or more).
-    # Create dataframe holding rows where column was null.
+    # Update rows where the column was null.
     for column_to_check in columns_to_check:
         data_without_columns.loc[
             data_without_columns[column_to_check].isnull(), "issue"
         ] = str(column_to_check) + " missing in lookup."
 
+    data_without_columns = data_without_columns[data_without_columns["issue"].notnull()]
     return data_without_columns[[identifier_column, "issue"]]
 
 
