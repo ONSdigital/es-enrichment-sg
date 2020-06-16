@@ -283,10 +283,15 @@ def test_method_success():
                          method_environment_variables):
         with open("tests/fixtures/test_method_prepared_output.json", "r") as file_1:
             file_data = file_1.read()
-        prepared_data = pd.DataFrame(json.loads(file_data))
+        prepared_data_main = pd.DataFrame(json.loads(file_data))
 
-        with open("tests/fixtures/test_method_input.json", "r") as file_2:
-            test_data = file_2.read()
+        with open("tests/fixtures/test_method_anomalies_prepared_output.json", "r")\
+                as file_2:
+            file_data = file_2.read()
+        prepared_data_anomalies = pd.DataFrame(json.loads(file_data))
+
+        with open("tests/fixtures/test_method_input.json", "r") as file_3:
+            test_data = file_3.read()
         method_runtime_variables["RuntimeVariables"]["data"] = test_data
 
         bucket_name = method_environment_variables["bucket_name"]
@@ -300,10 +305,13 @@ def test_method_success():
         output = lambda_method_function.lambda_handler(
             method_runtime_variables, test_generic_library.context_object)
 
-        produced_data = pd.DataFrame(json.loads(output["data"])).sort_index(axis=1)
+        produced_data_main = pd.DataFrame(json.loads(output["data"])).sort_index(axis=1)
+        produced_data_anomalies = pd.DataFrame(
+            json.loads(output["anomalies"]))
 
     assert output["success"]
-    assert_frame_equal(produced_data, prepared_data)
+    assert_frame_equal(produced_data_main, prepared_data_main)
+    assert_frame_equal(produced_data_anomalies, prepared_data_anomalies)
 
 
 def test_missing_column_detector():
