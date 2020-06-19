@@ -413,7 +413,7 @@ def test_wrangler_success_returned(mock_s3_get, mock_s3_put):
                 .return_value.decode.return_value = json.dumps({
                  "data": test_data_out,
                  "success": True,
-                 "anomalies": []
+                 "anomalies": "[]"
                 })
 
             output = lambda_wrangler_function.lambda_handler(
