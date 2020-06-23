@@ -124,14 +124,20 @@ def lambda_handler(event, context):
         if not json_response["success"]:
             raise exception_classes.MethodFailure(json_response["error"])
 
-        anomalies = json_response["anomalies"]
-
         aws_functions.save_data(bucket_name, out_file_name, json_response["data"],
                                 sqs_queue_url, outgoing_message_group_id, location)
 
         logger.info("Successfully sent data to s3.")
 
-        aws_functions.send_sns_message_with_anomalies(checkpoint, anomalies,
+        anomalies = json_response["anomalies"]
+
+        if anomalies != "[]":
+            aws_functions.save_to_s3(bucket_name, "Anomalies", anomalies, location)
+            have_anomalies = True
+        else:
+            have_anomalies = False
+
+        aws_functions.send_sns_message_with_anomalies(checkpoint, have_anomalies,
                                                       sns_topic_arn, "Enrichment.")
         if receipt_handler:
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handler)
