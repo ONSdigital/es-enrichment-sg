@@ -60,16 +60,12 @@ wrangler_runtime_variables = {
     "RuntimeVariables":
         {
             "lookups": lookups,
-            "location": "Here",
             "checkpoint": "999",
             "survey_column": "survey",
             "run_id": "bob",
-            "queue_url": "Earl",
             "marine_mismatch_check": True,
-            "incoming_message_group_id": "test_group",
             "in_file_name": "test_wrangler_input",
             "out_file_name": "test_wrangler_output.json",
-            "outgoing_message_group_id": "test_id",
             "sns_topic_arn": "fake_sns_arn",
             "period_column": "period"
         }
