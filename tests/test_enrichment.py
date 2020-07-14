@@ -60,16 +60,12 @@ wrangler_runtime_variables = {
     "RuntimeVariables":
         {
             "lookups": lookups,
-            "location": "Here",
             "checkpoint": "999",
             "survey_column": "survey",
             "run_id": "bob",
-            "queue_url": "Earl",
             "marine_mismatch_check": True,
-            "incoming_message_group_id": "test_group",
             "in_file_name": "test_wrangler_input",
             "out_file_name": "test_wrangler_output.json",
-            "outgoing_message_group_id": "test_id",
             "sns_topic_arn": "fake_sns_arn",
             "period_column": "period"
         }
@@ -119,9 +115,7 @@ def test_general_error(which_lambda, which_runtime_variables,
 
 
 @mock_s3
-@mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
-            side_effect=test_generic_library.replacement_get_dataframe)
-def test_incomplete_read_error(mock_s3_get):
+def test_incomplete_read_error():
     file_list = ["test_wrangler_input.json"]
 
     test_generic_library.incomplete_read_error(lambda_wrangler_function,
@@ -147,9 +141,7 @@ def test_key_error(which_lambda, which_environment_variables,
 
 
 @mock_s3
-@mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
-            side_effect=test_generic_library.replacement_get_dataframe)
-def test_method_error(mock_s3_get):
+def test_method_error():
     file_list = ["test_wrangler_input.json"]
 
     test_generic_library.wrangler_method_error(lambda_wrangler_function,
@@ -329,9 +321,7 @@ def test_missing_column_detector():
 
 
 @mock_s3
-@mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
-            side_effect=test_generic_library.replacement_get_dataframe)
-def test_wrangler_success_passed(mock_s3_get):
+def test_wrangler_success_passed():
     """
     Runs the wrangler function up to the method invoke.
     :param None
@@ -383,11 +373,9 @@ def test_wrangler_success_passed(mock_s3_get):
 
 
 @mock_s3
-@mock.patch('enrichment_wrangler.aws_functions.get_dataframe',
-            side_effect=test_generic_library.replacement_get_dataframe)
-@mock.patch('enrichment_wrangler.aws_functions.save_data',
-            side_effect=test_generic_library.replacement_save_data)
-def test_wrangler_success_returned(mock_s3_get, mock_s3_put):
+@mock.patch('enrichment_wrangler.aws_functions.save_to_s3',
+            side_effect=test_generic_library.replacement_save_to_s3)
+def test_wrangler_success_returned(mock_s3_put):
     """
     Runs the wrangler function after the method invoke.
     :param None
