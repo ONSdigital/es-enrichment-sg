@@ -118,7 +118,7 @@ def lambda_handler(event, context):
         anomalies = json_response["anomalies"]
 
         if anomalies != "[]":
-            aws_functions.save_to_s3(bucket_name, "Anomalies", anomalies)
+            aws_functions.save_to_s3(bucket_name, "Enrichment_Anomalies", anomalies)
             have_anomalies = True
         else:
             have_anomalies = False
