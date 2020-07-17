@@ -9,7 +9,6 @@ from marshmallow import Schema, fields
 
 class EnvironmentSchema(Schema):
     bucket_name = fields.Str(required=True)
-    checkpoint = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
     method_name = fields.Str(required=True)
 
@@ -33,7 +32,7 @@ def lambda_handler(event, context):
     Lambda function preparing data for enrichment and then calling the enrichment method.
     :param event: Json string representing input - String
     :param context:
-    :return Json: success and checkpoint information, and/or indication of error message.
+    :return Json: success and/or indication of error message.
     """
 
     # Set up logger.
@@ -64,7 +63,6 @@ def lambda_handler(event, context):
 
         # Environment Variables.
         bucket_name = environment_variables["bucket_name"]
-        checkpoint = environment_variables["checkpoint"]
         identifier_column = environment_variables["identifier_column"]
         method_name = environment_variables["method_name"]
 
@@ -123,7 +121,7 @@ def lambda_handler(event, context):
 
         logger.info("Successfully sent data to s3.")
 
-        aws_functions.send_sns_message_with_anomalies(checkpoint, anomalies,
+        aws_functions.send_sns_message_with_anomalies(anomalies,
                                                       sns_topic_arn, "Enrichment.")
         if receipt_handler:
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handler)
@@ -138,4 +136,4 @@ def lambda_handler(event, context):
             raise exception_classes.LambdaFailure(error_message)
 
     logger.info("Successfully completed module: " + current_module)
-    return {"success": True, "checkpoint": checkpoint}
+    return {"success": True}

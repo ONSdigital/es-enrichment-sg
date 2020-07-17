@@ -39,7 +39,6 @@ method_environment_variables = {
 
 wrangler_environment_variables = {
     "bucket_name": "test_bucket",
-    "checkpoint": "999",
     "identifier_column": "responder_id",
     "method_name": "enrichment_method"
 }
@@ -61,7 +60,6 @@ wrangler_runtime_variables = {
         {
             "lookups": lookups,
             "location": "Here",
-            "checkpoint": "999",
             "survey_column": "survey",
             "run_id": "bob",
             "queue_url": "Earl",
