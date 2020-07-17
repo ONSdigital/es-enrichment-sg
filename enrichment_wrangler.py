@@ -16,7 +16,6 @@ class EnvironmentSchema(Schema):
         raise ValueError(f"Error validating environment params: {e}")
 
     bucket_name = fields.Str(required=True)
-    checkpoint = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
     method_name = fields.Str(required=True)
 
@@ -43,7 +42,7 @@ def lambda_handler(event, context):
     Lambda function preparing data for enrichment and then calling the enrichment method.
     :param event: Json string representing input - String
     :param context:
-    :return Json: success and checkpoint information, and/or indication of error message.
+    :return Json: success and/or indication of error message.
     """
 
     # Set up logger.
@@ -68,7 +67,6 @@ def lambda_handler(event, context):
 
         # Environment Variables.
         bucket_name = environment_variables["bucket_name"]
-        checkpoint = environment_variables["checkpoint"]
         identifier_column = environment_variables["identifier_column"]
         method_name = environment_variables["method_name"]
 
@@ -125,7 +123,7 @@ def lambda_handler(event, context):
         else:
             have_anomalies = False
 
-        aws_functions.send_sns_message_with_anomalies(checkpoint, have_anomalies,
+        aws_functions.send_sns_message_with_anomalies(have_anomalies,
                                                       sns_topic_arn, "Enrichment.")
 
         logger.info("Successfully sent message to sns.")
@@ -139,4 +137,4 @@ def lambda_handler(event, context):
             raise exception_classes.LambdaFailure(error_message)
 
     logger.info("Successfully completed module: " + current_module)
-    return {"success": True, "checkpoint": checkpoint}
+    return {"success": True}

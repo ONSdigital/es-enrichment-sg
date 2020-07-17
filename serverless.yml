@@ -38,7 +38,6 @@ functions:
     tags:
       app: results
     environment:
-      checkpoint: 1
       bucket_name: spp-results-${self:custom.environment}
       identifier_column: responder_id
       method_name: es-enrichment-method
