@@ -3,11 +3,18 @@ import os
 
 import pandas as pd
 from es_aws_functions import aws_functions, general_functions
-from marshmallow import Schema, fields
+from marshmallow import EXCLUDE, Schema, fields
 from marshmallow.validate import Range
 
 
 class EnvironmentSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    def handle_error(self, e, data, **kwargs):
+        logging.error(f"Error validating environment params: {e}")
+        raise ValueError(f"Error validating environment params: {e}")
+
     bucket_name = fields.Str(required=True)
 
 
@@ -19,6 +26,13 @@ class LookupSchema(Schema):
 
 
 class RuntimeSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    def handle_error(self, e, data, **kwargs):
+        logging.error(f"Error validating runtime params: {e}")
+        raise ValueError(f"Error validating runtime params: {e}")
+
     data = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
     lookups = fields.Dict(
@@ -50,15 +64,9 @@ def lambda_handler(event, context):
         # Because it is used in exception handling
         run_id = event['RuntimeVariables']['run_id']
 
-        environment_variables, errors = EnvironmentSchema().load(os.environ)
-        if errors:
-            logger.error(f"Error validating environment params: {errors}")
-            raise ValueError(f"Error validating environment params: {errors}")
+        environment_variables = EnvironmentSchema().load(os.environ)
 
-        runtime_variables, errors = RuntimeSchema().load(event["RuntimeVariables"])
-        if errors:
-            logger.error(f"Error validating runtime params: {errors}")
-            raise ValueError(f"Error validating runtime params: {errors}")
+        runtime_variables = RuntimeSchema().load(event["RuntimeVariables"])
 
         logger.info("Validated parameters.")
 
@@ -121,11 +129,10 @@ def marine_mismatch_detector(data, survey_column, check_column,
     :return: bad_data_with_marine: Df containing information about any reference that is
     producing marine when it shouldn't - DataFrame
     """
-
-    bad_data = data[
-        (data[survey_column] == "076")
-        & (data[check_column] == "n")
-        ]
+    bad_data = data.copy()
+    bad_data = bad_data[
+        (bad_data[survey_column] == "076")
+        & (bad_data[check_column] == "n")]
     bad_data["issue"] = "Reference should not produce marine data."
     return bad_data[
         [
@@ -146,16 +153,17 @@ def missing_column_detector(data, columns_to_check, identifier_column):
     :param identifier_column: Column that holds the unique id of a row(usually responder id) - String
     :return: data_without_columns: DF containing information about any reference without the column. - DataFrame
     """
-    # Create empty dataframe to hold output.
-    data_without_columns = pd.DataFrame()
+    # Create a copy of the dataframe to hold output.
+    data_without_columns = data.copy()
 
     # For each of the passed in columns to check(1 or more).
-    # Create dataframe holding rows where column was null.
+    # Update rows where the column was null.
     for column_to_check in columns_to_check:
-        data_without_column = data[data[column_to_check].isnull()]
-        data_without_column["issue"] = str(column_to_check) + " missing in lookup."
-        data_without_columns = pd.concat([data_without_columns, data_without_column])
+        data_without_columns.loc[
+            data_without_columns[column_to_check].isnull(), "issue"
+        ] = str(column_to_check) + " missing in lookup."
 
+    data_without_columns = data_without_columns[data_without_columns["issue"].notnull()]
     return data_without_columns[[identifier_column, "issue"]]
 
 
