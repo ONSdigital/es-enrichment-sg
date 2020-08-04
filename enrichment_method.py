@@ -55,8 +55,8 @@ def lambda_handler(event, context):
     # Set up logger.
     current_module = "Enrichment - Method"
     error_message = ''
-    logger = logging.getLogger("Enrichment")
-    logger.setLevel(10)
+    logger = general_functions.get_logger()
+
     run_id = 0
     try:
         logger.info("Starting Enrichment Method")
