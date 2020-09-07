@@ -28,10 +28,11 @@ class RuntimeSchema(Schema):
         logging.error(f"Error validating runtime params: {e}")
         raise ValueError(f"Error validating runtime params: {e}")
 
-    lookups = fields.Dict(required=True)
+    bpm_queue_url = fields.Str(required=True)
     in_file_name = fields.Str(required=True)
-    out_file_name = fields.Str(required=True)
+    lookups = fields.Dict(required=True)
     marine_mismatch_check = fields.Boolean(required=True)
+    out_file_name = fields.Str(required=True)
     period_column = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
     survey_column = fields.Str(required=True)
@@ -70,6 +71,7 @@ def lambda_handler(event, context):
         method_name = environment_variables["method_name"]
 
         # Runtime Variables.
+        bpm_queue_url = runtime_variables["bpm_queue_url"]
         lookups = runtime_variables["lookups"]
         in_file_name = runtime_variables["in_file_name"]
         out_file_name = runtime_variables["out_file_name"]
@@ -79,6 +81,10 @@ def lambda_handler(event, context):
         survey_column = runtime_variables["survey_column"]
 
         logger.info("Retrieved configuration variables.")
+
+        # Send start of method status to BPM.
+        status = "IN PROGRESS"
+        aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id)
 
         # Set up client.
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
@@ -130,10 +136,19 @@ def lambda_handler(event, context):
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
                                                            run_id, context)
+        # Send failure of method status to BPM.
+        status = "ERROR IN MODULE: " + current_module + " please contact support"
+        aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id)
+
     finally:
         if (len(error_message)) > 0:
             logger.error(error_message)
             raise exception_classes.LambdaFailure(error_message)
 
     logger.info("Successfully completed module: " + current_module)
+
+    # Send end of method status to BPM.
+    status = "DONE"
+    aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id)
+
     return {"success": True}

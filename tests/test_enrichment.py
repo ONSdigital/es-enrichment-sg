@@ -58,6 +58,7 @@ method_runtime_variables = {
 wrangler_runtime_variables = {
     "RuntimeVariables":
         {
+            "bpm_queue_url": "fake_queue_url",
             "lookups": lookups,
             "survey_column": "survey",
             "run_id": "bob",
