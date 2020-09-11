@@ -58,6 +58,7 @@ method_runtime_variables = {
 wrangler_runtime_variables = {
     "RuntimeVariables":
         {
+            "bpm_queue_url": "fake_queue_url",
             "lookups": lookups,
             "survey_column": "survey",
             "run_id": "bob",
@@ -65,7 +66,8 @@ wrangler_runtime_variables = {
             "in_file_name": "test_wrangler_input",
             "out_file_name": "test_wrangler_output.json",
             "sns_topic_arn": "fake_sns_arn",
-            "period_column": "period"
+            "period_column": "period",
+            "total_steps": "6"
         }
 }
 
