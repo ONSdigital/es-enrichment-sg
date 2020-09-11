@@ -36,6 +36,7 @@ class RuntimeSchema(Schema):
     period_column = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
     survey_column = fields.Str(required=True)
+    total_steps = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -48,6 +49,7 @@ def lambda_handler(event, context):
 
     # Set up logger.
     current_module = "Enrichment - Wrangler"
+    current_step_num = "2"
     error_message = ""
     logger = general_functions.get_logger()
 
@@ -79,12 +81,14 @@ def lambda_handler(event, context):
         period_column = runtime_variables["period_column"]
         sns_topic_arn = runtime_variables["sns_topic_arn"]
         survey_column = runtime_variables["survey_column"]
+        total_steps = runtime_variables["total_steps"]
 
         logger.info("Retrieved configuration variables.")
 
         # Send start of method status to BPM.
         status = "IN PROGRESS"
-        aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id)
+        aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id,
+                                      current_step_num, total_steps)
 
         # Set up client.
         lambda_client = boto3.client("lambda", region_name="eu-west-2")
@@ -138,7 +142,8 @@ def lambda_handler(event, context):
                                                            run_id, context)
         # Send failure of method status to BPM.
         status = "ERROR IN MODULE: " + current_module + " please contact support"
-        aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id)
+        aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id,
+                                      current_step_num, total_steps)
 
     finally:
         if (len(error_message)) > 0:
@@ -149,6 +154,7 @@ def lambda_handler(event, context):
 
     # Send end of method status to BPM.
     status = "DONE"
-    aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id)
+    aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id,
+                                  current_step_num, total_steps)
 
     return {"success": True}

@@ -66,7 +66,8 @@ wrangler_runtime_variables = {
             "in_file_name": "test_wrangler_input",
             "out_file_name": "test_wrangler_output.json",
             "sns_topic_arn": "fake_sns_arn",
-            "period_column": "period"
+            "period_column": "period",
+            "total_steps": "6"
         }
 }
 
