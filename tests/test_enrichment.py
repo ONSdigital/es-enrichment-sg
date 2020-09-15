@@ -4,7 +4,7 @@ from unittest import mock
 import pandas as pd
 import pytest
 from es_aws_functions import exception_classes, test_generic_library
-from moto import mock_s3
+from moto import mock_s3, mock_sqs
 from pandas.testing import assert_frame_equal
 
 import enrichment_method as lambda_method_function
@@ -58,7 +58,7 @@ method_runtime_variables = {
 wrangler_runtime_variables = {
     "RuntimeVariables":
         {
-            "bpm_queue_url": "fake_queue_url",
+            "bpm_queue_url": "bpm_queue_url",
             "lookups": lookups,
             "survey_column": "survey",
             "run_id": "bob",
