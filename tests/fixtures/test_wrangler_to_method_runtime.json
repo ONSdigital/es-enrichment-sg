@@ -1,5 +1,5 @@
 {
-    "bpm_queue_url": "bpm_queue_url",
+    "bpm_queue_url": "fake_queue_url",
     "data": null,
     "identifier_column": "responder_id",
     "lookups": {

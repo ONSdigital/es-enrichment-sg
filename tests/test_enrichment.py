@@ -45,7 +45,7 @@ wrangler_environment_variables = {
 
 method_runtime_variables = {
     "RuntimeVariables": {
-        "bpm_queue_url": "bpm_queue_url",
+        "bpm_queue_url": "fake_queue_url",
         "data": None,
         "lookups": lookups,
         "marine_mismatch_check": True,
