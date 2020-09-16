@@ -45,6 +45,7 @@ wrangler_environment_variables = {
 
 method_runtime_variables = {
     "RuntimeVariables": {
+        "bpm_queue_url": "fake_queue_url",
         "data": None,
         "lookups": lookups,
         "marine_mismatch_check": True,
@@ -87,7 +88,8 @@ wrangler_runtime_variables = {
          wrangler_environment_variables, None,
          "ClientError", test_generic_library.wrangler_assert)
     ])
-def test_client_error(which_lambda, which_runtime_variables,
+@mock.patch('enrichment_wrangler.aws_functions.send_bpm_status')
+def test_client_error(mock_send_bpm_status, which_lambda, which_runtime_variables,
                       which_environment_variables, which_data,
                       expected_message, assertion):
     test_generic_library.client_error(which_lambda, which_runtime_variables,

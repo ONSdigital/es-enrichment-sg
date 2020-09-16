@@ -33,6 +33,7 @@ class RuntimeSchema(Schema):
         logging.error(f"Error validating runtime params: {e}")
         raise ValueError(f"Error validating runtime params: {e}")
 
+    bpm_queue_url = fields.Str(required=True)
     data = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
     lookups = fields.Dict(
@@ -57,6 +58,8 @@ def lambda_handler(event, context):
     error_message = ''
     logger = general_functions.get_logger()
 
+    bpm_queue_url = None
+
     run_id = 0
     try:
         logger.info("Starting Enrichment Method")
@@ -74,6 +77,7 @@ def lambda_handler(event, context):
         bucket_name = environment_variables["bucket_name"]
 
         # Runtime Variables.
+        bpm_queue_url = runtime_variables["bpm_queue_url"]
         data = runtime_variables['data']
         identifier_column = runtime_variables["identifier_column"]
         lookups = runtime_variables['lookups']
@@ -106,7 +110,8 @@ def lambda_handler(event, context):
         final_output = {"data": json_out, "anomalies": anomaly_out}
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
-                                                           run_id, context)
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
     finally:
         if (len(error_message)) > 0:
             logger.error(error_message)

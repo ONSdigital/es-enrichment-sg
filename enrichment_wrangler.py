@@ -49,9 +49,11 @@ def lambda_handler(event, context):
 
     # Set up logger.
     current_module = "Enrichment - Wrangler"
-    current_step_num = "2"
     error_message = ""
     logger = general_functions.get_logger()
+
+    bpm_queue_url = None
+    current_step_num = "2"
 
     # Define run_id outside of try block
     run_id = 0
@@ -99,6 +101,7 @@ def lambda_handler(event, context):
         data_json = data_df.to_json(orient="records")
         json_payload = {
             "RuntimeVariables": {
+                "bpm_queue_url": bpm_queue_url,
                 "data": data_json,
                 "lookups": lookups,
                 "marine_mismatch_check": marine_mismatch_check,
@@ -139,11 +142,8 @@ def lambda_handler(event, context):
 
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
-                                                           run_id, context)
-        # Send failure of method status to BPM.
-        status = "ERROR IN MODULE: " + current_module + " please contact support"
-        aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id,
-                                      current_step_num, total_steps)
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
 
     finally:
         if (len(error_message)) > 0:
