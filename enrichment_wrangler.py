@@ -29,12 +29,14 @@ class RuntimeSchema(Schema):
         raise ValueError(f"Error validating runtime params: {e}")
 
     bpm_queue_url = fields.Str(required=True)
+    environment = fields.Str(Required=True)
     in_file_name = fields.Str(required=True)
     lookups = fields.Dict(required=True)
     marine_mismatch_check = fields.Boolean(required=True)
     out_file_name = fields.Str(required=True)
     period_column = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
+    survey = fields.Str(required=True)
     survey_column = fields.Str(required=True)
     total_steps = fields.Str(required=True)
 
@@ -50,7 +52,6 @@ def lambda_handler(event, context):
     # Set up logger.
     current_module = "Enrichment - Wrangler"
     error_message = ""
-    logger = general_functions.get_logger()
 
     bpm_queue_url = None
     current_step_num = "2"
@@ -58,7 +59,6 @@ def lambda_handler(event, context):
     # Define run_id outside of try block
     run_id = 0
     try:
-        logger.info("Enrichment Wrangler Begun")
         # Retrieve run_id before input validation
         # Because it is used in exception handling
         run_id = event["RuntimeVariables"]["run_id"]
@@ -67,8 +67,6 @@ def lambda_handler(event, context):
 
         runtime_variables = RuntimeSchema().load(event["RuntimeVariables"])
 
-        logger.info("Validated parameters.")
-
         # Environment Variables.
         bucket_name = environment_variables["bucket_name"]
         identifier_column = environment_variables["identifier_column"]
@@ -76,16 +74,32 @@ def lambda_handler(event, context):
 
         # Runtime Variables.
         bpm_queue_url = runtime_variables["bpm_queue_url"]
+        environment = runtime_variables['environment']
         lookups = runtime_variables["lookups"]
         in_file_name = runtime_variables["in_file_name"]
         out_file_name = runtime_variables["out_file_name"]
         marine_mismatch_check = runtime_variables["marine_mismatch_check"]
         period_column = runtime_variables["period_column"]
         sns_topic_arn = runtime_variables["sns_topic_arn"]
+        survey = runtime_variables['survey']
         survey_column = runtime_variables["survey_column"]
         total_steps = runtime_variables["total_steps"]
 
-        logger.info("Retrieved configuration variables.")
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module, run_id,
+                                                           context=context)
+        raise exception_classes.LambdaFailure(error_message)
+
+    try:
+        logger = general_functions.get_logger(survey, current_module, environment,
+                                              run_id)
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context=context)
+
+        raise exception_classes.LambdaFailure(error_message)
+
+    try:
 
         # Send start of method status to BPM.
         status = "IN PROGRESS"
@@ -102,9 +116,11 @@ def lambda_handler(event, context):
         json_payload = {
             "RuntimeVariables": {
                 "bpm_queue_url": bpm_queue_url,
+                "environment": environment,
                 "data": data_json,
                 "lookups": lookups,
                 "marine_mismatch_check": marine_mismatch_check,
+                "survey": survey,
                 "survey_column": survey_column,
                 "period_column": period_column,
                 "identifier_column": identifier_column,
