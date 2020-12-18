@@ -1,6 +1,7 @@
 {
     "bpm_queue_url": "fake_queue_url",
     "data": null,
+    "environment": "sandbox",
     "identifier_column": "responder_id",
     "lookups": {
         "0": {
@@ -32,5 +33,6 @@
     "marine_mismatch_check": true,
     "period_column": "period",
     "run_id": "bob",
+    "survey": "BMI_SG",
     "survey_column": "survey"
 }

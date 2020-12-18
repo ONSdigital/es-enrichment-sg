@@ -47,9 +47,11 @@ method_runtime_variables = {
     "RuntimeVariables": {
         "bpm_queue_url": "fake_queue_url",
         "data": None,
+        "environment": "sandbox",
         "lookups": lookups,
         "marine_mismatch_check": True,
         "period_column": "period",
+        "survey": "BMI_SG",
         "survey_column": "survey",
         "identifier_column": "responder_id",
         "run_id": "bob"
@@ -60,6 +62,7 @@ wrangler_runtime_variables = {
     "RuntimeVariables":
         {
             "bpm_queue_url": "fake_queue_url",
+            "environment": "sandbox",
             "lookups": lookups,
             "survey_column": "survey",
             "run_id": "bob",
@@ -67,6 +70,7 @@ wrangler_runtime_variables = {
             "in_file_name": "test_wrangler_input",
             "out_file_name": "test_wrangler_output.json",
             "sns_topic_arn": "fake_sns_arn",
+            "survey": "BMI_SG",
             "period_column": "period",
             "total_steps": "6"
         }

@@ -35,6 +35,7 @@ class RuntimeSchema(Schema):
 
     bpm_queue_url = fields.Str(required=True)
     data = fields.Str(required=True)
+    environment = fields.Str(required=True)
     identifier_column = fields.Str(required=True)
     lookups = fields.Dict(
         keys=fields.Int(validate=Range(min=0)),
@@ -42,6 +43,7 @@ class RuntimeSchema(Schema):
     marine_mismatch_check = fields.Boolean(required=True)
     period_column = fields.Str(required=True)
     run_id = fields.Str(required=True)
+    survey = fields.Str(required=True)
     survey_column = fields.Str(required=True)
 
 
@@ -56,13 +58,11 @@ def lambda_handler(event, context):
     # Set up logger.
     current_module = "Enrichment - Method"
     error_message = ''
-    logger = general_functions.get_logger()
 
     bpm_queue_url = None
 
     run_id = 0
     try:
-        logger.info("Starting Enrichment Method")
         # Retrieve run_id before input validation
         # Because it is used in exception handling
         run_id = event['RuntimeVariables']['run_id']
@@ -71,21 +71,35 @@ def lambda_handler(event, context):
 
         runtime_variables = RuntimeSchema().load(event["RuntimeVariables"])
 
-        logger.info("Validated parameters.")
-
         # Environment Variables.
         bucket_name = environment_variables["bucket_name"]
 
         # Runtime Variables.
         bpm_queue_url = runtime_variables["bpm_queue_url"]
         data = runtime_variables['data']
+        environment = runtime_variables['environment']
         identifier_column = runtime_variables["identifier_column"]
         lookups = runtime_variables['lookups']
         marine_mismatch_check = runtime_variables["marine_mismatch_check"]
         period_column = runtime_variables["period_column"]
+        survey = runtime_variables['survey']
         survey_column = runtime_variables["survey_column"]
 
-        logger.info("Retrieved configuration variables.")
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module, run_id,
+                                                           context=context)
+        return {"success": False, "error": error_message}
+
+    try:
+        logger = general_functions.get_logger(survey, current_module, environment,
+                                              run_id)
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context=context)
+        return {"success": False, "error": error_message}
+
+    try:
+        logger.info("Started - retrieved configuration variables.")
 
         input_data = pd.read_json(data, dtype=False)
 
