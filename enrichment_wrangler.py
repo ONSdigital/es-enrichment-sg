@@ -111,7 +111,7 @@ def lambda_handler(event, context):
 
         data_df = aws_functions.read_dataframe_from_s3(bucket_name, in_file_name)
 
-        logger.info(current_module + " started - retrieved data from s3")
+        logger.info("Started - retrieved data from s3")
         data_json = data_df.to_json(orient="records")
         json_payload = {
             "RuntimeVariables": {
