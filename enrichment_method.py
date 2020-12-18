@@ -99,7 +99,7 @@ def lambda_handler(event, context):
         return {"success": False, "error": error_message}
 
     try:
-        logger.info("Retrieved configuration variables.")
+        logger.info(current_module + " started - retrieved configuration variables.")
 
         input_data = pd.read_json(data, dtype=False)
 
