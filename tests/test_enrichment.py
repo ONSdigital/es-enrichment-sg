@@ -72,7 +72,7 @@ wrangler_runtime_variables = {
             "sns_topic_arn": "fake_sns_arn",
             "survey": "BMI_SG",
             "period_column": "period",
-            "total_steps": "6"
+            "total_steps": 6
         }
 }
 
