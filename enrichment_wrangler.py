@@ -38,7 +38,7 @@ class RuntimeSchema(Schema):
     sns_topic_arn = fields.Str(required=True)
     survey = fields.Str(required=True)
     survey_column = fields.Str(required=True)
-    total_steps = fields.Str(required=True)
+    total_steps = fields.Int(required=True)
 
 
 def lambda_handler(event, context):
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
     error_message = ""
 
     bpm_queue_url = None
-    current_step_num = "2"
+    current_step_num = 2
 
     # Define run_id outside of try block
     run_id = 0
